@@ -1,24 +1,16 @@
-﻿  stdafx.cpp
-  ClassicNoise.cpp
-  main.cpp
-c:\users\migue\documents\github\lei\noise\noise\ReadTGA.h(3): warning C4005: '_CRT_SECURE_NO_WARNINGS': macro redefinition
-  c:\users\migue\documents\github\lei\noise\noise\ReadTGA.h(3): note: command-line arguments:  see previous definition of '_CRT_SECURE_NO_WARNINGS'
-  Noise.cpp
-c:\users\migue\documents\github\lei\noise\noise\ReadTGA.h(3): warning C4005: '_CRT_SECURE_NO_WARNINGS': macro redefinition
-  c:\users\migue\documents\github\lei\noise\noise\ReadTGA.h(3): note: command-line arguments:  see previous definition of '_CRT_SECURE_NO_WARNINGS'
-Noise.cpp(83): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+﻿  Noise.cpp
+d:\catarina\documents\github\lei\noise\noise\ReadTGA.h(3): warning C4005: '_CRT_SECURE_NO_WARNINGS': macro redefinition
+  d:\catarina\documents\github\lei\noise\noise\ReadTGA.h(3): note: command-line arguments:  see previous definition of '_CRT_SECURE_NO_WARNINGS'
+Noise.cpp(84): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
 Noise.cpp(174): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
 Noise.cpp(176): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
 Noise.cpp(178): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
 Noise.cpp(180): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
 Noise.cpp(182): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-  ReadTGA.cpp
-c:\users\migue\documents\github\lei\noise\noise\ReadTGA.h(3): warning C4005: '_CRT_SECURE_NO_WARNINGS': macro redefinition
-  c:\users\migue\documents\github\lei\noise\noise\ReadTGA.h(3): note: command-line arguments:  see previous definition of '_CRT_SECURE_NO_WARNINGS'
   Generating code
-  137 of 137 functions (100.0%) were compiled, the rest were copied from previous compilation.
-    45 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+  1 of 143 functions ( 0.7%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-  Noise.vcxproj -> C:\Users\migue\Documents\GitHub\lei\Noise\Release\Noise.exe
-  Noise.vcxproj -> C:\Users\migue\Documents\GitHub\lei\Noise\Release\Noise.pdb (Full PDB)
+  Noise.vcxproj -> D:\Catarina\Documents\GitHub\lei\Noise\Release\Noise.exe
+  Noise.vcxproj -> D:\Catarina\Documents\GitHub\lei\Noise\Release\Noise.pdb (Full PDB)

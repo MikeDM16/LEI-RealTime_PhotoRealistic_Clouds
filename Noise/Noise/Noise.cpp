@@ -70,19 +70,21 @@ void Noise::lerFicheiro(char* dirFile) {
 			vtkstream << "Exemple teste" << "\n";
 			vtkstream << "BINARY" << "\n";
 			vtkstream << "DATASET STRUCTURED_POINTS" << std::endl;
-			vtkstream << "DIMENSIONS 128 128 128" << std::endl;
+			vtkstream << "DIMENSIONS 32 32 32" << std::endl;
 			vtkstream << "ORIGIN 0 0 0" << std::endl;
 			vtkstream << "SPACING 0.5 0.5 0.5" << std::endl;
-			vtkstream << "POINT_DATA 2097152" << std::endl;
+			vtkstream << "POINT_DATA 32768" << std::endl;
 			vtkstream << "SCALARS image_data float" << std::endl;
 			vtkstream << "LOOKUP_TABLE default" << std::endl;
 		}
 		char *linha = new char[100];
-		while (fgets(linha, 100, fd) > 0) {
-			/*linha.size()==0 --> linha = null*/
-			float m = atof(linha);
+		int i = 0;
+		while (fgets(linha, 100, fd)) {
+			printf("%d\n", i++);
+			float m = abs(atof(linha));
 			vtkstream.write((char*)&m, sizeof(float));
 		}
+		vtkstream.close();
 	}
 	fclose(fd);
 }
@@ -145,8 +147,6 @@ void Noise::create_VTK(){
 		//		}
 		//	}
 		//}
-
-		lerFicheiro("vtk_values");
 
 		vtkstream.close();
 	}
