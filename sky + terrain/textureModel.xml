@@ -1,0 +1,103 @@
+<?xml version="1.0" ?>
+<project name="Texture Model" >
+	
+	<assets>
+		<attributes>
+			<!-- parallax parameters -->
+			<attribute type="COLOR" name="scale" data="FLOAT" value=50/>
+		</attributes>
+
+		<viewports>
+			<viewport name="MainViewport" >
+				<ORIGIN x=0.0 y=0.0 />
+				<SIZE width=1 height=1 />
+				<CLEAR_COLOR r="0.0" g="0.749" b="1.0" />
+			</viewport>
+		</viewports>
+
+		<scenes>
+			<scene name="cena" type="Scene">	
+				<geometry name = "terra" type = "GRID" material="terrain" 
+							DIVISIONS=1024 LENGTH=1024 >
+				</geometry>	
+				<geometry name = "ceu" type = "GRID" material="clouds" 
+							DIVISIONS=1024 LENGTH=2048 >
+					<TRANSLATE x=0 y=100 z=0 />
+					<ROTATE x=1 y=0 z=0 w=180 />
+				</geometry>								
+			</scene>
+		</scenes>
+		<sensors>
+			<sensor name="tsensor" class="TimeSensor">
+				<enabled value="1" />
+				<secondsToStart value="0" />
+				<cycleInterval value="20" />
+				<loop value="1" />
+			</sensor>
+		</sensors>
+
+		<interpolators>
+			<interpolator name="Rotation" class="PositionInterpolator">
+				<keyFrames>
+					<keyFrame key=0.0 w=0   y=1.0/>
+					<keyFrame key=0.5 w=180 y=1.0/>
+					<keyFrame key=1.0 w=360 y=1.0/>
+				</keyFrames>
+			</interpolator>
+		</interpolators>
+
+		<routes>
+			<route name="timer2interpol" sender="tsensor" receiver="Rotation" 
+					eventOut="TIMESENSOR_FRACTION_CHANGED"
+					eventIn="SET_INTERPOLATOR_FRACTION" />
+			<route name="interpol2scene1" sender="Rotation" receiver=""
+					eventOut="INTERPOLATOR_POSITION"
+					eventIn="SET_ROTATION" />
+		</routes>
+		
+		<cameras>
+			<camera name="MainCamera" >
+				<viewport name="MainViewport" />
+				<POSITION x=0 y=80 z=0 />
+				<VIEW x=-0.6 y=0 z=-1.0 />
+				<NEAR value=0.01/>
+			</camera>
+		</cameras>
+		
+		<lights>
+			<light name="Sun">
+				<DIRECTION x=-2 y=-2 z=-2 />
+			</light>
+		</lights>
+		
+		<materialLibs>
+			<materialLib filename="textureModel.mlib" />
+		</materialLibs>
+	</assets>
+	
+	<pipelines>
+		<pipeline name="clouds" >
+			<pass class="default" name="pass1" >
+				<scenes>
+					<scene name="cena" />
+				</scenes>
+				<camera name="MainCamera" />
+				<lights>
+					<light name="Sun" />
+				</lights>
+				<materialMaps>
+					<map fromMaterial="terrain" toLibrary="Texture" toMaterial="terrain" />
+					<map fromMaterial="clouds" toLibrary="Texture" toMaterial="clouds" />
+				</materialMaps>
+			</pass>
+		</pipeline>
+	</pipelines>
+
+	<interface>
+		<window label="Main Window">
+			<var label="scale" type="COLOR" context="Texture::terrain" 
+					component="scale" def="min=0 max=1000 step=15" />
+		</window>
+	</interface>
+
+</project>
