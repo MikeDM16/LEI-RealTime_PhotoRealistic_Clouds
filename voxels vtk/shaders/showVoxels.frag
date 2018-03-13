@@ -2,7 +2,7 @@
 
 out vec4 FragColor;
 
-uniform sampler3D grid;
+uniform sampler2D grid;
 uniform mat4 VM;
 uniform float FOV;
 uniform float RATIO;
@@ -68,7 +68,11 @@ void main() {
 
     for (;  /*color.w == 0  && */ travel != 0;  travel--) {
 
-		color += 0.005*vec4(texelFetch(grid, ivec3((pos) * GridSize/pow(2.0,level)), level).r) ;
+        int x = int(pos.x * 32 / GridSize); 
+        int y = int(pos.y * 32 / GridSize * 32);
+        int z = int(pos.z * 32 / GridSize);
+
+		color += 0.001 * vec4(texture2D(grid, ivec2((y+x/1, z))).rgba) ;
 		pos += step;
      }
 	//color = color * 0.01;
@@ -82,6 +86,8 @@ void main() {
 		color = k * vec4(0,1,0,1);
 	else if (k > 0.2 && k < 0.3)
 		color = k * vec4(1,0,1,1);*/
+    
     FragColor.rgb = vec3(color);
     FragColor.a = color.w;
+    //FragColor = color;
 }

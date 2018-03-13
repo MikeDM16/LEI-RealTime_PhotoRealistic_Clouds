@@ -21,14 +21,14 @@
 	</renderTargets>
 
 	<textures>
-		<texture name="grid" filename="textures/foot.vtk" />
+		<texture name="grid" filename="textures/noiseErosion.tga" />
 	</textures>
 
 	<buffers>
 		<buffer name="dummy" >
 			<SIZE value = 16 />
 			<structure>
-				<field value="FLOAT" />
+				<field value="FLOAT"/>
 				<field value="FLOAT" />
 				<field value="FLOAT" />
 				<field value="FLOAT" />
@@ -38,7 +38,7 @@
 	
 	<shaders>
 		<shader name="showVoxels" 		vs = "shaders/showVoxels.vert" 
-										gs = "shaders/showVoxels.geom"
+									    gs = "shaders/showVoxels.geom"
 										ps = "shaders/showVoxels.frag" /> 
 	</shaders>
 	

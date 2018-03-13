@@ -21,7 +21,7 @@
 	</renderTargets>
 
 	<textures>
-		<texture name="grid" filename="texturas/foot.vtk" />
+		<texture name="grid" filename="texturas/noiseErosion.tga" />
 	</textures>
 
 	<buffers>

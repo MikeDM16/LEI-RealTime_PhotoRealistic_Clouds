@@ -2,7 +2,7 @@
 <project name="Voxels" width="512" height="512">
 	<assets>
 		<constants>
-			<constant name="GridSize" value = "256" />
+			<constant name="GridSize" value = "128" />
 		</constants>
 		<attributes>
 			<attribute name="GridSize" type="PASS" data="INT" value="GridSize" />

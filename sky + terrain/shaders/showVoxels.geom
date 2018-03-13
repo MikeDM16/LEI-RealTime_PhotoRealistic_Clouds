@@ -29,14 +29,16 @@ void main()
     faces[4] = ivec4(0,3,4,7); faces[5] = ivec4(2,1,6,5);
 
     vec4 P = vec4(0,0,0,1);
-    vec4 I = vec4(15,0,0,0);
-    vec4 J = vec4(0,5,0,0);
-    vec4 K = vec4(0,0,15,0);
+    vec4 I = vec4(1,0,0,0);
+    vec4 J = vec4(0,1,0,0);
+    vec4 K = vec4(0,0,1,0);
 
-    objCube[0] = P+K+I+J; objCube[1] = P+K+I-J;
-    objCube[2] = P+K-I-J; objCube[3] = P+K-I+J;
-    objCube[4] = P-K+I+J; objCube[5] = P-K+I-J;
-    objCube[6] = P-K-I-J; objCube[7] = P-K-I+J;
+    vec4 up = vec4(0,250,0,0);
+
+    objCube[0] = P+512*K+512*I+64*J + up; objCube[1] = P+512*K+512*I-64*J + up;
+    objCube[2] = P+512*K-512*I-64*J + up; objCube[3] = P+512*K-512*I+64*J + up;
+    objCube[4] = P-512*K+512*I+64*J + up; objCube[5] = P-512*K+512*I-64*J + up;
+    objCube[6] = P-512*K-512*I-64*J + up; objCube[7] = P-512*K-512*I+64*J + up;
 
     // Transform the corners of the box:
     for (int vert = 0; vert < 8; vert++)

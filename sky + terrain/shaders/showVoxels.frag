@@ -47,12 +47,13 @@ void main() {
     rayDirection = (vec4(rayDirection, 0) * VM).xyz;
 
     Ray eye = Ray( RayOrigin, normalize(rayDirection) );
-    AABB aabb = AABB(vec3(-1.0), vec3(+1.0));
-
+    vec3 up = vec3(0,250,0);
+    AABB aabb = AABB(vec3(-512.0, -64.0, -512.0) + up, vec3(+512.0, +64.0, +512.0) + up);
+    
     float tnear, tfar;
     IntersectBox(eye, aabb, tnear, tfar);
     if (tnear < 0.0) tnear = 0.0;
-	
+    
     vec3 rayStart = eye.Origin + eye.Dir * tnear;
     vec3 rayStop = eye.Origin + eye.Dir * tfar;
     rayStart = 0.5 * (rayStart + 1.0);

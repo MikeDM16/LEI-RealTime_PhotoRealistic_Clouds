@@ -36,8 +36,7 @@
 			<scene name="Dummy" >
 				<buffers name="positions" primitive="POINTS" material="showRays">
 					<position name="dummy" fromLibrary="Voxels" />				
-				</buffers>	
-				<TRANSLATE x=0 y=90 z=0 />
+				</buffers>
 			</scene>
 		</scenes>
 		
@@ -64,13 +63,14 @@
 	
 	<pipelines>
 		<pipeline name="clouds" >
+
 			<pass class="quad" name="pass1" >
 				<viewport name = "MainViewport" />
 				<materialMaps>
-					<map fromMaterial="*" toLibrary="Texture" toMaterial="clouds" />
+					<map fromMaterial="*" toLibrary="Texture" toMaterial="sky" />
 				</materialMaps>
 			</pass>
-			<!--
+
 			<pass class="default" name="pass2" >
 				<COLOR_CLEAR value="false" />
 				<scenes>
@@ -83,19 +83,29 @@
 				<materialMaps>
 					<map fromMaterial="*" toLibrary="Texture" toMaterial="terrain" />
 				</materialMaps>
-			</pass>-->
-			<pass class="default" name="showVoxels">				
+			</pass>
+
+			<pass class="default" name="pass3">				
 				<COLOR_CLEAR value="false" />
 				<scenes>
 					<scene name="Dummy" />
-				</scenes>	
+				</scenes>
 				<camera name="MainCamera" />
 				<viewport name="MainViewport" />
 				<materialMaps>			
-					<map fromMaterial="*" 
-						 toLibrary="Voxels" toMaterial="showVoxels" />
+					<map fromMaterial="*" toLibrary="Voxels" toMaterial="showVoxels" />
 				</materialMaps>				
 			</pass>
+			<!--
+			<pass class="default" name="pass3">				
+				<COLOR_CLEAR value="false" />
+				<camera name="MainCamera" />
+				<materialMaps>			
+					<map fromMaterial="*" toLibrary="Texture" toMaterial="clouds" />
+				</materialMaps>				
+			</pass>
+			-->
+
 		</pipeline>
 	</pipelines>
 
