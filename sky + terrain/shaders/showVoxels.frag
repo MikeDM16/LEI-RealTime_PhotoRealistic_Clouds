@@ -8,7 +8,7 @@ uniform float FOV;
 uniform float RATIO;
 uniform vec2 WindowSize;
 uniform vec3 RayOrigin;
-uniform int GridSize;
+uniform int GridSize = 128;
 uniform int level = 0;
 
 struct Ray {
@@ -38,7 +38,6 @@ bool IntersectBox(Ray r, AABB aabb, out float t0, out float t1)
 }
 
 void main() {
-
 	float FocalLength = 1.0/ tan(radians(FOV*0.5));
     vec3 rayDirection;
     rayDirection.xy = 2.0 * gl_FragCoord.xy / WindowSize.xy - 1.0;
@@ -68,7 +67,6 @@ void main() {
     //vec4 color = vec4(0);
 
     for (;  /*color.w == 0  && */ travel != 0;  travel--) {
-
 		color += 0.005*vec4(texelFetch(grid, ivec3((pos) * GridSize/pow(2.0,level)), level).r) ;
 		pos += step;
      }

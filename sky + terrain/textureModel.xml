@@ -3,12 +3,12 @@
 	
 	<assets>
 		<constants>
-			<constant name="GridSize" value = "256" />
+			<constant name="GridSize" value = "12" />
 		</constants>
 
 		<attributes>
 			<attribute name="GridSize" type="PASS" data="INT" value="GridSize" />
-			<attribute name="GridLevels" type="PASS" data="INT" value=7 />
+			<attribute name="GridLevels" type="PASS" data="INT" value=128 />
 			<attribute name="GridCurrentLevel" type="PASS" data="INT" value=0 />
 
 			<!-- terrain parameters -->
@@ -43,9 +43,9 @@
 		<cameras>
 			<camera name="MainCamera" >
 				<viewport name="MainViewport" />
-				<POSITION x=0 y=80 z=0 />
-				<VIEW x=-0.6 y=0 z=-1.0 />
-				<NEAR value=0.01/>
+				<POSITION x=568 y=163 z=734 />
+				<VIEW x=-0.6 y=0.08 z=-0.786 />
+				<NEAR value=0.0001/>
 			</camera>
 		</cameras>
 		
