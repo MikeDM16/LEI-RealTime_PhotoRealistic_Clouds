@@ -85,7 +85,7 @@
 				</materialMaps>
 			</pass>
 
-			<pass class="default" name="pass3">				
+			<!--<pass class="default" name="pass3">				
 				<COLOR_CLEAR value="false" />
 				<scenes>
 					<scene name="Dummy" />
@@ -95,17 +95,8 @@
 				<materialMaps>			
 					<map fromMaterial="*" toLibrary="Voxels" toMaterial="showVoxels" />
 				</materialMaps>				
-			</pass>
-			<!--
-			<pass class="default" name="pass3">				
-				<COLOR_CLEAR value="false" />
-				<camera name="MainCamera" />
-				<materialMaps>			
-					<map fromMaterial="*" toLibrary="Texture" toMaterial="clouds" />
-				</materialMaps>				
-			</pass>
-			-->
-
+			</pass>-->
+			
 		</pipeline>
 	</pipelines>
 

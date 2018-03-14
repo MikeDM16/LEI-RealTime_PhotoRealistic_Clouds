@@ -58,5 +58,6 @@ void main() {
 	//float color = hipo_cloud/cloud_height;
 	//float color2 = dada pelo samples_total_lenght
 	float color3 = abs(cos);
-	colorOut = vec4(1, 1, 1, 1);
+	colorOut.rgb = vec3(1, 0.75, 0.25);
+	colorOut.a = 0.3;
 }

@@ -17,6 +17,7 @@ out Data {
 	vec2 texCoord;
 	vec3 normal;
 	vec3 l_dir;
+	vec4 position;
 } DataOut;
 
 void main () {
@@ -24,5 +25,6 @@ void main () {
 	DataOut.normal = normalize(m_normal * normal);
 	DataOut.eye = -(m_viewModel * position);
 	DataOut.l_dir = normalize(vec3(m_view * -l_dir));
+	DataOut.position = position;
 	gl_Position = m_pvm * position;	
 }
