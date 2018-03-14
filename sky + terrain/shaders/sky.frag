@@ -122,7 +122,7 @@ void main() {
 	vec4 color = vec4(0);
 
 	vec4 p_ini = vec4(initial_point_cloud);
-	for (int i = 0; i < 128; i++) {
+	/*for (int i = 0; i < 128; i++) {
 		int x = int(p_ini.x * 32 / 256); 
         int y = int(p_ini.y * 32 / 128 * 32);
         int z = int(p_ini.z * 32 / 256);
@@ -136,13 +136,13 @@ void main() {
 		
 		if(p_ini.y > initial_point_sky) break; // sai fora volume
 
-	}
+	}*/
 
 	colorOut = vec4(1);
 
-	vec4 pos_mundo = camPosition+camView;
-	if (pos_mundo.y > 0)
-		colorOut = color;
+	//vec4 pos_mundo = camPosition+camView;
+	//if (pos_mundo.y > 0)
+	//	colorOut = color;
 
 	//colorOut = m_modelView * DataIn.position;
 	

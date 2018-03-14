@@ -33,6 +33,51 @@
 							DIVISIONS=1024 LENGTH=1024 >
 				</geometry>							
 			</scene>
+
+			<scene name="boxes" type="Scene">	
+						
+				<geometry name = "box1" type = "BOX" material="paintcubos">
+					<TRANSLATE x = -512 y = 500 z = -512 />
+					<SCALE x=10 y=10 z=10/>
+				</geometry>	
+						
+				<geometry name = "box2" type = "BOX" material="paintcubos">
+					<TRANSLATE x = -512 y = 500 z = 512 />
+					<SCALE x=10 y=10 z=10/>
+				</geometry>	
+						
+				<geometry name = "box3" type = "BOX" material="paintcubos">
+					<TRANSLATE x = 512 y = 500 z = 512 />
+					<SCALE x=10 y=10 z=10/>
+				</geometry>			
+				
+				<geometry name = "box4" type = "BOX" material="paintcubos">
+					<TRANSLATE x = 512 y = 500 z= -512 />
+					<SCALE x=10 y=10 z=10/>
+				</geometry>			
+				
+				<geometry name = "box5" type = "BOX" material="paintcubos">
+					<TRANSLATE x = -512 y = 756 z = -512 />
+					<SCALE x=10 y=10 z=10/>
+				</geometry>			
+				
+				<geometry name = "box6" type = "BOX" material="paintcubos">
+					<TRANSLATE x = -512 y = 756 z= 512 />
+					<SCALE x=10 y=10 z=10/>
+				</geometry>			
+				
+				<geometry name = "box7" type = "BOX" material="paintcubos">
+					<TRANSLATE x = 512 y = 756 z = 512 />
+					<SCALE x=10 y=10 z=10/>
+				</geometry>			
+				
+				<geometry name = "box8" type = "BOX" material="paintcubos">
+					<TRANSLATE x = 512 y = 756 z = -512 />
+					<SCALE x=10 y=10 z=10/>
+				</geometry>
+				
+			</scene>
+
 			<scene name="Dummy" >
 				<buffers name="positions" primitive="POINTS" material="showRays">
 					<position name="dummy" fromLibrary="Voxels" />				
@@ -46,6 +91,7 @@
 				<POSITION x=568 y=163 z=734 />
 				<VIEW x=-0.6 y=0.08 z=-0.786 />
 				<NEAR value=0.0001/>
+				<FAR value=15000/>
 			</camera>
 		</cameras>
 		
@@ -72,6 +118,17 @@
 			</pass>
 
 			<pass class="default" name="pass2" >
+				<COLOR_CLEAR value="false" />
+				<scenes>
+					<scene name="boxes" />
+				</scenes>
+				<camera name="MainCamera" />
+				<materialMaps>
+					<map fromMaterial="*" toLibrary="Texture" toMaterial="paintcubos" />
+				</materialMaps>
+			</pass>
+
+			<pass class="default" name="pass3" >
 				<COLOR_CLEAR value="false" />
 				<scenes>
 					<scene name="terrain" />

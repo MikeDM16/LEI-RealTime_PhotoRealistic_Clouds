@@ -8,12 +8,15 @@
 
 
 	<shaders>
-		<shader name="sky"	 				vs = "shaders/sky.vert" 
-											ps = "shaders/sky.frag" />
+		<shader name="sky"	 				vs = "shaders/newsky.vert" 
+											ps = "shaders/newsky.frag" />
 		<shader name="terrain" 				vs = "shaders/terrain.vert" 
 											ps = "shaders/terrain.frag" />
 		<shader name="clouds"	 			vs = "shaders/clouds.vert" 
 											ps = "shaders/clouds.frag" />
+
+		<shader name="paintcubos"			vs = "shaders/paintcubos.vert" 
+											ps = "shaders/paintcubos.frag" />
 	</shaders>
 	
 	<states>
@@ -50,13 +53,12 @@
 						     type="CAMERA" context="CURRENT" 
 						     component="POSITION" />
 
-					<valueof uniform="camDirection" 
-							 type="CAMERA" context="CURRENT" 
-							 component="LOOK_AT_POINT"/>
-
 					<valueof uniform="FOV"
 							 type="CAMERA" context="CURRENT"
 							 component="FOV" />
+					<valueof uniform="camUp"
+							 type="CAMERA" context="CURRENT"
+							 component="NORMALIZED_UP"/>
 
 					<valueof uniform="camView"
 							 type="CAMERA" context="CURRENT"
@@ -140,6 +142,16 @@
 				</values>
 			</shader>
 			<state name="NoCull" />
+		</material>
+
+		<material name="paintcubos">
+			<shader name="paintcubos">
+				<values>
+					<valueof uniform="m_pvm" 
+							 type="RENDERER" context="CURRENT" 
+							 component="PROJECTION_VIEW_MODEL" />
+				</values>
+			</shader>
 		</material>
 		
 	</materials>
