@@ -26,7 +26,32 @@ in Data {
 	vec3 l_dir;
 } DataIn;
 
+struct Ray {
+    vec3 Origin;
+    vec3 Dir;
+};
+
+struct AABB {
+    vec3 Min;
+    vec3 Max;
+};
 out vec4 colorOut;
+
+bool IntersectBox(Ray r, AABB aabb, out float t0, out float t1)
+{
+    vec3 invR = 1.0 / r.Dir;
+    vec3 tbot = invR * (aabb.Min-r.Origin);
+    vec3 ttop = invR * (aabb.Max-r.Origin);
+    vec3 tmin = min(ttop, tbot);
+    vec3 tmax = max(ttop, tbot);
+    // vec2 t = max(tmin.xx, tmin.yz);
+    // t0 = max(t.x, t.y);
+    // t = min(tmax.xx, tmax.yz);
+    // t1 = min(t.x, t.y);
+ 	 t0 = max(tmin.x, max(tmin.y, tmin.z));
+	 t1 = min(tmax.x, min(tmax.y, tmax.z));
+   return t0 <= t1;
+}
 
 void main(){
 	vec4 A, B, C, D, E, F, G, H;
@@ -46,7 +71,9 @@ void main(){
 	vec2 pos = DataIn.texCoord * vec2(RATIO*angle, angle);
 	vec3 dir = camView.xyz * camPosition.z + camUp.xyz * camPosition.y + camRight * camPosition.x;
 	
+	Ray eye = Ray( camPosition.xyz, normalize(dir) );
+    
 
-	colorOut = vec4(dir, 1);
+	colorOut = color;
 
 }
