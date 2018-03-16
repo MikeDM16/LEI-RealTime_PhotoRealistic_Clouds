@@ -4,7 +4,7 @@ uniform	mat4 m_view;
 uniform mat4 m_modelView;
 uniform mat4 m_pvm;
 uniform mat4 m_model;
-uniform vec4 camPosition, camView;
+uniform vec4 camPos, camView;
 uniform vec4 camUp;
 uniform float FOV;
 uniform float RATIO;
@@ -35,6 +35,7 @@ struct AABB {
     vec3 Min;
     vec3 Max;
 };
+
 out vec4 colorOut;
 
 bool IntersectBox(Ray r, AABB aabb, out float t0, out float t1)
@@ -54,7 +55,7 @@ bool IntersectBox(Ray r, AABB aabb, out float t0, out float t1)
 }
 
 void main(){
-	vec4 A, B, C, D, E, F, G, H;
+		vec4 A, B, C, D, E, F, G, H;
 
 	A = vec4(cloud_startx,  cloud_starty, cloud_startz, 1);
 	B = vec4(cloud_finishx, cloud_starty, cloud_startz, 1);
@@ -65,15 +66,55 @@ void main(){
 	G = vec4(cloud_finishx, cloud_finishy, cloud_finishz, 1);
 	H = vec4(cloud_startx,  cloud_finishy, cloud_finishz, 1);
 
-	vec3 camRight = cross(camView.xyz, camUp.xyz);
-
+	// multiplica por 1/2  pq é metade do FOV 
 	float angle = tan(FOV * PI / 180 * 0.5);
+	vec3 camRight = cross(camView.xyz, camUp.xyz);
+	// Fazer a deslocação das coordenadas de textura para o espaço do viewport/quad 
 	vec2 pos = DataIn.texCoord * vec2(RATIO*angle, angle);
-	vec3 dir = camView.xyz * camPosition.z + camUp.xyz * camPosition.y + camRight * camPosition.x;
+	//vec3 dir = camView.xyz * camPos.z + camUp.xyz * camPos.y + camRight * camPos.x;
+	vec3 dir = camView.xyz + camUp.xyz * pos.y + camRight * pos.x;
 	
-	Ray eye = Ray( camPosition.xyz, normalize(dir) );
+	Ray eye = Ray( camPos.xyz, normalize(dir) );
     
+	//normalizar o eye para depois multiplicar a hipotenusa pelo eye
+	vec4 floor = vec4(1,0,0,0); 
+	float cos = dot(normalize(vec4(camPos.xyz, 0)), floor);
 
-	colorOut = color;
+	//cos2 + sin2 = 1
+	//o seno é negativo quando se olha para baixo
+	float sin = sqrt(1 - pow(cos, 2));
 
+	//Pitágoras - SOH
+	float hipo_cloud_start = cloud_starty/sin;
+	float hipo_cloud_finish = cloud_finishy/sin;
+
+	int layers = 128;
+	float layer_size = (cloud_finishy - cloud_starty)/layers;
+	
+	//float samples_total_lenght = hipo_sky - hipo_cloud;
+	//float nr_samples = 20; //no futuro depende do angulo: quanto menor for o coseno menor o nr de samples
+	//float sample_size = samples_total_lenght/nr_samples;
+	
+	colorOut = vec4(0);
+
+	//ponto inicial no volume = pos_cam + K * vector_direção_normalizada
+	// => K = distancia da hipotenusa 
+	vec3 ini_p_Vol_Cloud = camPos.xyz + hipo_cloud_start * dir;	
+
+
+	//start point again
+	vec3 ponto = ini_p_Vol_Cloud; 
+	if(int(ponto.y) > cloud_starty){
+		for(int i = 0; i < layers; i++){
+			if(int(ponto.y) > cloud_finishy){	break;	}
+			colorOut += 0.005;
+			
+			// ... ToDo magic 
+
+			// next point - batota 
+			ponto = ponto + layer_size * dir;
+		}
+	}
+	
+	
 }
