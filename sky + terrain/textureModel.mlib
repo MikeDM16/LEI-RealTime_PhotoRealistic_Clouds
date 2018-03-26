@@ -71,7 +71,11 @@
 					<valueof uniform="WindowSize"
 						 	 type="VIEWPORT" context="CURRENT"
 							 component="ABSOLUTE_SIZE" />
-					 
+							 
+					<valueof uniform="screenSize" 
+							 type="VIEWPORT" context="MainViewport"
+							 component="ABSOLUTE_SIZE" />
+
 					<valueof uniform="l_dir"
 							 type="LIGHT" context="CURRENT" 
 							 component="DIRECTION" id=0/>
