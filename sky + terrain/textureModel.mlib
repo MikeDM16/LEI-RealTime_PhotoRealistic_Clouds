@@ -3,7 +3,7 @@
 
 	<textures>
 		<texture name="heightMap" filename="textures/heightMap.jpg" mipmap=true />
-		<texture name="grid" filename="textures/noiseErosion.tga" />
+		<texture name="grid" filename="textures/noiseShape.tga" />
 	</textures>
 
 
@@ -53,9 +53,17 @@
 						     type="CAMERA" context="CURRENT" 
 						     component="POSITION" />
 
+					<valueof uniform="RayOrigin"    
+						     type="CAMERA" context="CURRENT" 
+							 component="POSITION" />
+					
+					<valueof uniform="WindowSize"	
+							 type="VIEWPORT" context="CURRENT"
+							 component="ABSOLUTE_SIZE" />
 					<valueof uniform="FOV"
 							 type="CAMERA" context="CURRENT"
 							 component="FOV" />
+
 					<valueof uniform="camUp"
 							 type="CAMERA" context="CURRENT"
 							 component="NORMALIZED_UP"/>
@@ -71,14 +79,22 @@
 					<valueof uniform="WindowSize"
 						 	 type="VIEWPORT" context="CURRENT"
 							 component="ABSOLUTE_SIZE" />
-							 
-					<valueof uniform="screenSize" 
-							 type="VIEWPORT" context="MainViewport"
-							 component="ABSOLUTE_SIZE" />
 
 					<valueof uniform="l_dir"
 							 type="LIGHT" context="CURRENT" 
 							 component="DIRECTION" id=0/>
+
+					<valueof uniform="grid" 		
+							 type="TEXTURE_BINDING" context="CURRENT"
+							 component="UNIT" id=1 />
+							 
+					<valueof uniform="heightMap" 		
+							 type="TEXTURE_BINDING" context="CURRENT"
+							 component="UNIT" id=0 />
+
+					<valueof uniform="RayOrigin"    
+							 type="CAMERA" context="CURRENT" 
+							 component="POSITION" />
 				</values>
 			</shader>
 		</material>
