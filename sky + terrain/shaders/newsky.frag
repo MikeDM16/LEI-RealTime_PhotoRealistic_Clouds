@@ -46,7 +46,8 @@ void main(){
 	vec3 camRight = cross(camView.xyz, camUp.xyz);
 	// Fazer a deslocação para o espaço do viewport/quad 
 	// O nosso objeto é o mundo => position no local space = position global space
-	vec2 pos = DataIn.position.xy * vec2(RATIO*angle, angle);
+	vec2 coord = 2 * DataIn.texCoord.xy - 1;
+	vec2 pos = coord * vec2(RATIO*angle, angle);
 	// Versão Luce: vec3 dir = camView.xyz * camPos.z + camUp.xyz * camPos.y + camRight * camPos.x;
 	vec3 dir = camView.xyz + camUp.xyz * pos.y + camRight * pos.x;
 	Ray eye = Ray( camPos.xyz, normalize(dir) );
@@ -79,21 +80,25 @@ void main(){
 
 	//ponto inicial no volume = pos_cam + K * vector_direção_normalizada
 	// => K = distancia da hipotenusa 
-	vec3 ini_p_Vol_Cloud = camPos.xyz + hipo_cloud_start * dir;	
+	vec3 ini_p_Vol_Cloud = camPos.xyz + hipo_cloud_start * normalize(dir);	
 	vec3 ponto = ini_p_Vol_Cloud;
 
+	vec3 rayStart = eye.Origin + eye.Dir * hipo_cloud_start;
+    vec3 rayStop = eye.Origin + eye.Dir * hipo_cloud_finish;
+	
 	//Se está a olhar para baixo, termina 
 	//dot(dir, vec3(1,0,0)) < 0 ???  
-	if((int(ponto.y) < 0) ){
-		colorOut = vec4(0,1,0,0);
-		return;
-	}
-
-	//start point again
-	if(int(ponto.y) > cloud_starty){
+	//if((int(rayStart.y) < 0) ){
+	//	colorOut = vec4(0,1,0,0);
+	//	return;
+	//}
+	colorOut = vec4(0.2, 0.2, 1 ,1);
+	//start point again. O ponto aqui é o inicio do volume.
+	// acho que aqui não pode ser ponto. Tem que ser a posição da camara.
+	//if(int(ponto.y) > cloud_starty){
 		for(int i = 0; i < layers; i++){
-			if(int(ponto.y) > cloud_finishy){	return;	}
-			colorOut += 0.005;
+			//if(int(ponto.y) > cloud_finishy){	return;	}
+			
 			/* ivec2 texCoord; 
 			texCoord.x = int(pos.x * 32 / GridSize);
 			texCoord.y =  
@@ -109,9 +114,18 @@ void main(){
 			*/
 
 			// next point - batota 
-			ponto = ponto + layer_size * dir;
+			if (rayStart.y > 500 && rayStart.y < 756 && rayStart.x > -512 && rayStart.x < 512 && rayStart.z > -512 && rayStart.z < 512) 
+				colorOut += 0.05;
+				// buscar as coordenadas da nuvem
+			
+			if (rayStart.y < 0) {
+				colorOut = vec4(0,1,0,1);
+				break;
+			}
+
+			rayStart = rayStart + 2 * normalize(dir);
 		}
-	}
+	//}
 
 	
 	

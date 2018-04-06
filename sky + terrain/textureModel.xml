@@ -88,8 +88,8 @@
 		<cameras>
 			<camera name="MainCamera" >
 				<viewport name="MainViewport" />
-				<POSITION x=568 y=163 z=734 />
-				<VIEW x=-0.6 y=0.08 z=-0.786 />
+				<POSITION x=-37 y=0 z=981 />
+				<VIEW x=0.04 y=0.62 z=-0.83 />
 				<NEAR value=0.0001/>
 				<FAR value=15000/>
 			</camera>

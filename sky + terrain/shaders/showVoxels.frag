@@ -2,7 +2,7 @@
 
 out vec4 FragColor;
 
-uniform sampler3D grid;
+uniform sampler2D grid;
 uniform mat4 VM;
 uniform float FOV;
 uniform float RATIO;
@@ -58,7 +58,7 @@ void main() {
     rayStart = 0.5 * (rayStart + 1.0);
     rayStop = 0.5 * (rayStop + 1.0);
 
-	int steps = int(0.5 + distance(rayStop, rayStart)  * float(GridSize) * 2);
+	int steps = int(0.5 + distance(rayStop, rayStart)  * 32 * 2);
     vec3 step = (rayStop-rayStart) /float (steps);
     vec3 pos = rayStart + 0.5 * step;
     int travel = steps;
@@ -67,7 +67,10 @@ void main() {
     //vec4 color = vec4(0);
 
     for (;  /*color.w == 0  && */ travel != 0;  travel--) {
-		color += 0.005*vec4(texelFetch(grid, ivec3((pos) * GridSize/pow(2.0,level)), level).r) ;
+        vec3 posaux = pos;
+        posaux.x *= int(pos.z) % 32;
+
+		color += 0.005*vec4(texelFetch(grid, ivec2(posaux.x, int(posaux.y)%32), level).r);
 		pos += step;
      }
 	//color = color * 0.01;

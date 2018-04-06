@@ -9,7 +9,7 @@
 
 	<shaders>
 		<shader name="sky"	 				vs = "shaders/newsky.vert" 
-											ps = "shaders/newsky.frag" />
+											ps = "shaders/newsky.frag"/>
 		<shader name="terrain" 				vs = "shaders/terrain.vert" 
 											ps = "shaders/terrain.frag" />
 		<shader name="clouds"	 			vs = "shaders/clouds.vert" 
@@ -91,10 +91,6 @@
 					<valueof uniform="heightMap" 		
 							 type="TEXTURE_BINDING" context="CURRENT"
 							 component="UNIT" id=0 />
-
-					<valueof uniform="RayOrigin"    
-							 type="CAMERA" context="CURRENT" 
-							 component="POSITION" />
 				</values>
 			</shader>
 		</material>
