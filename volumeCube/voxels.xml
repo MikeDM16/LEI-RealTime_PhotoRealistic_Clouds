@@ -2,14 +2,14 @@
 <project name="Voxels" width="512" height="512">
 	<assets>
 		<constants>
-			<constant name="GridSize" value = "256" />
+			<constant name="GridSize" value = "128" />
 		</constants>
 		<attributes>
 			<attribute name="GridSize" type="PASS" data="INT" value="GridSize" />
 			<attribute name="GridLevels" type="PASS" data="INT" value=7 />
 			<attribute name="GridCurrentLevel" type="PASS" data="INT" value=0 />
-			<attribute name="aabbMin" type="PASS" data="VEC3" x=-1 y=-1 z=-1/>
-			<attribute name="aabbMax" type="PASS" data="VEC3" x=1 y=1 z=1/>
+			<attribute name="aabbMin" type="PASS" data="VEC3" x=-3 y=-1 z=-3/>
+			<attribute name="aabbMax" type="PASS" data="VEC3" x=3 y=1 z=3/>
 		</attributes>
 		<scenes>
 			<!--scene name="MainScene" param="UNITIZE">
@@ -49,8 +49,8 @@
 			<camera name="MainCamera">
 				<viewport name="MainViewport" />
 				<projection TYPE="PERSPECTIVE" FOV=60 NEAR=0.1 FAR=20.0 />
-				<POSITION x=0 y=0.0 z=5 />
-				<VIEW x=0.0 y=0.0 z=-1.0 />
+				<POSITION x=-4.12 y=2.75 z=7.12 />
+				<VIEW x=0.50 y=-0.32 z=-0.80 />
 				<UP x=0 y=1 z=0 />
 			</camera>
 		</cameras>

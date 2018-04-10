@@ -2,13 +2,16 @@
 
 out vec4 FragColor;
 
-uniform sampler3D grid;
+uniform sampler2D grid;
+uniform int gridWidth = 16384;
+uniform int gridHeight = 128; 
+uniform int GridSize;
+
 uniform mat4 VM;
 uniform float FOV;
 uniform float RATIO;
 uniform vec2 WindowSize;
 uniform vec3 RayOrigin;
-uniform int GridSize;
 uniform int level = 0;
 uniform vec3 aabbMin, aabbMax;
 
@@ -50,15 +53,19 @@ void main() {
     Ray eye = Ray( RayOrigin, normalize(rayDirection) );
 
     float tnear, tfar;
-    IntersectBox(eye, tnear, tfar);
+    bool r = IntersectBox(eye, tnear, tfar);
     if (tnear < 0.0) tnear = 0.0;
-	
+
     vec3 rayStart = eye.Origin + eye.Dir * tnear;
     vec3 rayStop = eye.Origin + eye.Dir * tfar;
 	
 	vec3 len = aabbMax - aabbMin;
     rayStart = 1/len * (rayStart -aabbMin);
     rayStop = 1/len * (rayStop -aabbMin);
+         
+    double larg = aabbMax.x - aabbMin.x;
+    double cump = aabbMax.z - aabbMin.z;
+    double alt  = aabbMax.y - aabbMin.y;     
 
 	int steps = int(0.5 + distance(rayStop, rayStart)  * float(GridSize) * 2);
     vec3 step = (rayStop-rayStart) /float (steps);
@@ -66,11 +73,21 @@ void main() {
     int travel = steps;
 	vec4 color = vec4(0);
     for (;  /*color.w == 0  && */ travel != 0;  travel--) {
+        vec3 aux = pos; 
+        // Passar todas as coordenas do pos para [0,128]
+        aux.xz *= gridHeight; // *= 128;
+        // Converter y para uma das N texturas
+        aux.y *= gridWidth; // *= 16384 
 
-		color+= vec4(texelFetch(grid, ivec3((pos) * GridSize/pow(2.0,level)), level).r) ;
-		pos += step;
+        vec2 textCoord = vec2(0);
+        textCoord.x = aux.x + aux.y; 
+        textCoord.y = aux.z;
+
+		color +=  vec4(texelFetch(grid, ivec2(textCoord), level).rgba) ;
+        pos = aux;
+        pos += step;
      }
-	color = color* 0.01;
+	//color = color* 0.01;
 
 	//if (color != vec4(0))
 	//	FragColor.rgb = vec3(0.5);

@@ -20,7 +20,7 @@
 	</renderTargets>
 
 	<textures>
-		<texture name="grid" filename="texturas/foot.vtk" />
+		<texture name="grid" filename="texturas/noiseShape.tga" />
 	</textures>
 
 	<buffers>
@@ -72,7 +72,11 @@
 														component="ABSOLUTE_SIZE" />
 					<valueof uniform="GridSize" 	type="PASS" context="CURRENT"
 														component="GridSize" />
-
+					<!-- <valueof uniform="gridWidth" 	type="CURRENT" context="CURRENT"
+													component="WIDTH" />
+					<valueof uniform="gridHeight" 	type="CURRENT" context="CURRENT"
+														component="HEIGHT" /> -->
+														
 					<valueof uniform="aabbMin" 	type="PASS" context="CURRENT"
 														component="aabbMin" />
 
