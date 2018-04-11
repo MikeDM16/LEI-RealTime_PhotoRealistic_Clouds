@@ -20,7 +20,8 @@
 	</renderTargets>
 
 	<textures>
-		<texture name="grid" filename="texturas/noiseShape.tga" />
+		<texture name="shape" 	filename="texturas/noiseShape.tga" />
+		<texture name="erosion" filename="texturas/noiseErosion.tga" />
 	</textures>
 
 	<buffers>
@@ -66,28 +67,42 @@
 														component="PROJECTION_VIEW_MODEL" />
 					<valueof uniform="VM"         	type="RENDERER" context="CURRENT" 
 														component="VIEW_MODEL" />
-					<valueof uniform="grid"			type="TEXTURE_BINDING" context="CURRENT"
-														id=1 component="UNIT" />
+
 					<valueof uniform="WindowSize"	type="VIEWPORT" context="CURRENT"
 														component="ABSOLUTE_SIZE" />
 					<valueof uniform="GridSize" 	type="PASS" context="CURRENT"
 														component="GridSize" />
-					<!-- <valueof uniform="gridWidth" 	type="CURRENT" context="CURRENT"
-													component="WIDTH" />
-					<valueof uniform="gridHeight" 	type="CURRENT" context="CURRENT"
-														component="HEIGHT" /> -->
+
+					<valueof uniform="shape"			type="TEXTURE_BINDING" context="CURRENT"
+															id=1 component="UNIT" />
+					<valueof uniform="shapeWidth" 		type="TEXTURE" context="shape"
+															id=1 component="WIDTH" />
+					<valueof uniform="shapeHeight" 		type="TEXTURE" context="shape"
+															id=1 component="HEIGHT" />
+
+					<valueof uniform="erosion"			type="TEXTURE_BINDING" context="CURRENT"
+															id=2 component="UNIT" />
+					<valueof uniform="erosionWidth" 	type="TEXTURE" context="erosion"
+															id=2 component="WIDTH" />
+					<valueof uniform="erosionHeight" 	type="TEXTURE" context="erosion"
+															id=2 component="HEIGHT" />
 														
 					<valueof uniform="aabbMin" 	type="PASS" context="CURRENT"
 														component="aabbMin" />
-
 					<valueof uniform="aabbMax" 	type="PASS" context="CURRENT"
-														component="aabbMax" />
-														
+														component="aabbMax" />			
 				</values>
 			</shader>
 			
 			<textures>
-				<texture UNIT=1 name="grid" >
+				<texture UNIT=1 name="shape" >
+					<MIN_FILTER value="NEAREST_MIPMAP_NEAREST" />
+					<MAG_FILTER value="NEAREST" />
+					<WRAP_S value="CLAMP_TO_BORDER" />
+					<WRAP_T value="CLAMP_TO_BORDER" />
+					<WRAP_R value="CLAMP_TO_BORDER" />
+				</texture>
+				<texture UNIT=2 name="erosion" >
 					<MIN_FILTER value="NEAREST_MIPMAP_NEAREST" />
 					<MAG_FILTER value="NEAREST" />
 					<WRAP_S value="CLAMP_TO_BORDER" />

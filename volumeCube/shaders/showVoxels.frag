@@ -2,9 +2,14 @@
 
 out vec4 FragColor;
 
-uniform sampler2D grid;
-uniform int gridWidth = 16384;
-uniform int gridHeight = 128; 
+uniform sampler2D shape;
+uniform int shapeWidth;
+uniform int shapeHeight;
+
+uniform sampler2D erosion;
+uniform int erosionWidth;
+uniform int erosionHeight;
+
 uniform int GridSize;
 
 uniform mat4 VM;
@@ -68,36 +73,33 @@ void main() {
     double alt  = aabbMax.y - aabbMin.y;     
 
 	int steps = int(0.5 + distance(rayStop, rayStart)  * float(GridSize) * 2);
-    vec3 step = (rayStop-rayStart) /float (steps);
+    vec3 step = (rayStop-rayStart) / float(steps);
     vec3 pos = rayStart + 0.5 * step;
     int travel = steps;
-	vec4 color = vec4(0);
+	vec4 color = vec4(0.2, 0.5, 1.0, 1.0);
+    //vec4 color = vec4(0.0);
     for (;  /*color.w == 0  && */ travel != 0;  travel--) {
-        vec3 aux = pos; 
+        
+        vec3 aux = vec3(pos);
         // Passar todas as coordenas do pos para [0,128]
-        aux.xz *= gridHeight; // *= 128;
-        // Converter y para uma das N texturas
-        aux.y *= gridWidth; // *= 16384 
+        aux.xyz *= shapeHeight;
+        aux.x = floor(aux.y)*shapeHeight + aux.x;
+  
+        vec2 textCoord = aux.xz;
+        color += 0.01 * vec4(texelFetch(shape, ivec2(textCoord), level).b);
 
-        vec2 textCoord = vec2(0);
-        textCoord.x = aux.x + aux.y; 
-        textCoord.y = aux.z;
+        vec3 aux2 = vec3(pos);  
+        // Passar todas as coordenas do pos para [0,128]
+        aux2.xyz *= erosionHeight;
+        aux2.x = floor(aux2.y)*erosionHeight + aux2.x;
 
-		color +=  vec4(texelFetch(grid, ivec2(textCoord), level).rgba) ;
-        pos = aux;
+        vec2 textCoord2 = aux2.xz;
+        color -= 0.01 * vec4(texelFetch(erosion, ivec2(textCoord2), level).b);
+        
+        //pos = aux;
         pos += step;
-     }
-	//color = color* 0.01;
+    }
 
-	//if (color != vec4(0))
-	//	FragColor.rgb = vec3(0.5);
-	//else 
-	
-	/* float k = length(color);
-	if (k > 0.1 && k < 0.2)
-		color = k * vec4(0,1,0,1);
-	else if (k > 0.2 && k < 0.3)
-		color = k * vec4(1,0,1,1);*/
     FragColor.rgb = vec3(color);
     FragColor.a = color.w;
 }
