@@ -20,8 +20,9 @@
 	</renderTargets>
 
 	<textures>
-		<texture name="shape" 	filename="texturas/noiseShape.tga" />
-		<texture name="erosion" filename="texturas/noiseErosion.tga" />
+		<texture name="shapeNoise" 	filename="texturas/noiseShape.tga" />
+		<texture name="erosionNoise" filename="texturas/noiseErosion.tga" />
+		<texture name="weatherTexture" filename="texturas/weatherTexture.jpg" />
 	</textures>
 
 	<buffers>
@@ -73,20 +74,30 @@
 					<valueof uniform="GridSize" 	type="PASS" context="CURRENT"
 														component="GridSize" />
 
-					<valueof uniform="shape"			type="TEXTURE_BINDING" context="CURRENT"
+					<valueof uniform="shapeNoise"			type="TEXTURE_BINDING" context="CURRENT"
 															id=1 component="UNIT" />
-					<valueof uniform="shapeWidth" 		type="TEXTURE" context="shape"
+					<valueof uniform="shapeWidth" 		type="TEXTURE" context="shapeNoise"
 															id=1 component="WIDTH" />
-					<valueof uniform="shapeHeight" 		type="TEXTURE" context="shape"
+					<valueof uniform="shapeHeight" 		type="TEXTURE" context="shapeNoise"
 															id=1 component="HEIGHT" />
 
-					<valueof uniform="erosion"			type="TEXTURE_BINDING" context="CURRENT"
+					<valueof uniform="erosionNoise"			type="TEXTURE_BINDING" context="CURRENT"
 															id=2 component="UNIT" />
-					<valueof uniform="erosionWidth" 	type="TEXTURE" context="erosion"
+					<valueof uniform="erosionWidth" 	type="TEXTURE" context="erosionNoise"
 															id=2 component="WIDTH" />
-					<valueof uniform="erosionHeight" 	type="TEXTURE" context="erosion"
+					<valueof uniform="erosionHeight" 	type="TEXTURE" context="erosionNoise"
 															id=2 component="HEIGHT" />
-														
+
+					<valueof uniform="weatherTexture"	type="TEXTURE_BINDING" context="CURRENT"
+															id=3 component="UNIT" />
+					<valueof uniform="weatherWidth" 	type="TEXTURE" context="weatherTexture"
+															id=3 component="WIDTH" />
+					<valueof uniform="weatherHeight" 	type="TEXTURE" context="weatherTexture"
+															id=3 component="HEIGHT" />
+					
+					<valueof uniform="layer_Height" 	type="COLOR" context="CURRENT"
+															component="layer_Height" />								
+					
 					<valueof uniform="aabbMin" 	type="PASS" context="CURRENT"
 														component="aabbMin" />
 					<valueof uniform="aabbMax" 	type="PASS" context="CURRENT"
@@ -95,20 +106,28 @@
 			</shader>
 			
 			<textures>
-				<texture UNIT=1 name="shape" >
+				<texture UNIT=1 name="shapeNoise" >
 					<MIN_FILTER value="NEAREST_MIPMAP_NEAREST" />
 					<MAG_FILTER value="NEAREST" />
 					<WRAP_S value="CLAMP_TO_BORDER" />
 					<WRAP_T value="CLAMP_TO_BORDER" />
 					<WRAP_R value="CLAMP_TO_BORDER" />
 				</texture>
-				<texture UNIT=2 name="erosion" >
+				<texture UNIT=2 name="erosionNoise" >
 					<MIN_FILTER value="NEAREST_MIPMAP_NEAREST" />
 					<MAG_FILTER value="NEAREST" />
 					<WRAP_S value="CLAMP_TO_BORDER" />
 					<WRAP_T value="CLAMP_TO_BORDER" />
 					<WRAP_R value="CLAMP_TO_BORDER" />
 				</texture>
+				<texture UNIT=3 name="weatherTexture" >
+					<MIN_FILTER value="NEAREST_MIPMAP_NEAREST" />
+					<MAG_FILTER value="NEAREST" />
+					<WRAP_S value="CLAMP_TO_BORDER" />
+					<WRAP_T value="CLAMP_TO_BORDER" />
+					<WRAP_R value="CLAMP_TO_BORDER" />
+				</texture>
+
 			</textures>
 			
 			<state name="NoCull" />

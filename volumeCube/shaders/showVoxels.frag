@@ -2,13 +2,17 @@
 
 out vec4 FragColor;
 
-uniform sampler2D shape;
+uniform sampler2D shapeNoise;
 uniform int shapeWidth;
 uniform int shapeHeight;
 
-uniform sampler2D erosion;
+uniform sampler2D erosionNoise;
 uniform int erosionWidth;
 uniform int erosionHeight;
+
+uniform sampler2D weatherTexture;
+uniform int weatherWidth;
+uniform int weatherHeight;
 
 uniform int GridSize;
 
@@ -19,6 +23,8 @@ uniform vec2 WindowSize;
 uniform vec3 RayOrigin;
 uniform int level = 0;
 uniform vec3 aabbMin, aabbMax;
+
+uniform float layer_Height;
 
 struct Ray {
     vec3 Origin;
@@ -46,6 +52,26 @@ bool IntersectBox(Ray r, out float t0, out float t1)
    return t0 <= t1;
 }
 
+double HeightSignal(vec3 pos, double h_start, double h_cloud) {
+    // h_start = altitude onde inicia a nuvem
+    // h_cloud = altura da nuvem, conforme o volume da mesma
+    // h_start e h_cloud estão entre [0..1]
+    // pos --> retirar a altura onde está o pos na fase a Ray Marching
+
+    // isto se calhar têm todos que ser convertidos para a escala do tamanho da layer
+    
+    // Altura da caixa é 2 ...
+    double atm = pos.y*layer_Height;
+    double r  = (atm - h_start)*(atm - h_start - h_cloud);
+    r *= (-4 / (h_cloud * h_cloud + 0.00001));
+    return r; 
+}
+
+double HeightGradient(vec3 pos, double h_start, double h_cloud) {
+    // Altura da caixa é 2 ...
+    double atm = pos.y*layer_Height;
+    return atm;
+}
 void main() {
 
 	float FocalLength = 1.0/ tan(radians(FOV*0.5));
@@ -78,24 +104,81 @@ void main() {
     int travel = steps;
 	vec4 color = vec4(0.2, 0.5, 1.0, 1.0);
     //vec4 color = vec4(0.0);
+    
     for (;  /*color.w == 0  && */ travel != 0;  travel--) {
-        
+        /* ----------------- Tetativa 1 ----------------- 
         vec3 aux = vec3(pos);
         // Passar todas as coordenas do pos para [0,128]
         aux.xyz *= shapeHeight;
         aux.x = floor(aux.y)*shapeHeight + aux.x;
-  
         vec2 textCoord = aux.xz;
-        color += 0.01 * vec4(texelFetch(shape, ivec2(textCoord), level).b);
+        
+        // Assumir que a WeatherTexture é a RGB  e a shape o canal alfa
+        vec3 weather = texelFetch(shapeNoise, ivec2(textCoord), level).rgb;
+        double density = weather.r;
 
+        // Aplicação da função Height signal
+        density *= HeightSignal(pos, weather.b, weather.g);
+
+        //--- Fase da shape ---
+        vec3 aux1 = vec3(pos);
+        aux1.xyz *= shapeHeight;
+        aux1.x = floor(aux1.y)*shapeHeight + aux1.x;
+        vec2 textCoord1 = aux1.xz;
+        density += texelFetch(shapeNoise, ivec2(textCoord1), level).a;
+        
+        //--- Fase da Erosion ---
         vec3 aux2 = vec3(pos);  
-        // Passar todas as coordenas do pos para [0,128]
         aux2.xyz *= erosionHeight;
         aux2.x = floor(aux2.y)*erosionHeight + aux2.x;
-
         vec2 textCoord2 = aux2.xz;
-        color -= 0.01 * vec4(texelFetch(erosion, ivec2(textCoord2), level).b);
+        density -= texelFetch(erosionNoise, ivec2(textCoord2), level).b;
         
+        density *= HeightGradient(pos, weather.b, weather.g);
+
+        if(density > 0){ color += 0.01*vec4(density);  }*/
+
+        
+
+        // ----------------- Tetativa 2 ----------------- 
+        vec3 aux = vec3(pos);
+        aux.x *= weatherHeight;
+        aux.z *= weatherWidth;
+        //aux.x = floor(aux.y)*(weatherHeight) + aux.x;
+        vec2 textCoord = aux.xz;    
+
+        // Densidade inicial obtida da weather texture
+        vec3 weather = texelFetch(weatherTexture, ivec2(textCoord), level).rgb;
+        double density = weather.r;
+    
+        // Aplicação da função Height signal
+        density *= HeightSignal(pos, weather.b, weather.g);
+
+        //--- Fase da shape  ---
+        vec3 aux1 = vec3(pos);
+        aux1.xyz *= shapeHeight;
+        aux1.x = floor(aux1.y)*shapeHeight + aux1.x;
+        vec2 textCoord1 = aux1.xz;
+        density += texelFetch(shapeNoise, ivec2(textCoord1), level).r;
+
+        //--- Fase da shape + Erosion ---
+        vec3 aux2 = vec3(pos);  
+        aux2.xyz *= erosionHeight;
+        aux2.x = floor(aux2.y)*erosionHeight + aux2.x;
+        vec2 textCoord2 = aux2.xz;
+        density -=  texelFetch(erosionNoise, ivec2(textCoord2), level).r;
+        
+        // Only use positive densitys after erosion ! 
+        if(density > 0){ 
+            density *= HeightGradient(pos, weather.b, weather.g);
+            // clamp density to 1 for more balance lightning
+            if(density > 1) {density = 1; }
+
+            color += 0.01*vec4(density);  
+        }
+        
+       
+                
         //pos = aux;
         pos += step;
     }

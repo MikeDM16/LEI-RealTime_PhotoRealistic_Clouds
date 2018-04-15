@@ -8,8 +8,9 @@
 			<attribute name="GridSize" type="PASS" data="INT" value="GridSize" />
 			<attribute name="GridLevels" type="PASS" data="INT" value=7 />
 			<attribute name="GridCurrentLevel" type="PASS" data="INT" value=0 />
-			<attribute name="aabbMin" type="PASS" data="VEC3" x=-3 y=-3 z=-3/>
-			<attribute name="aabbMax" type="PASS" data="VEC3" x=3 y=3 z=3/>
+			<attribute name="aabbMin" type="PASS" data="VEC3" x=-3 y=-1 z=-3/>
+			<attribute name="aabbMax" type="PASS" data="VEC3" x=3 y=1 z=3/>
+			<attribute type="COLOR" name="layer_Height" data="FLOAT" value=2.0/>
 		</attributes>
 		<scenes>
 			<!--scene name="MainScene" param="UNITIZE">
@@ -84,4 +85,13 @@
 			</pass>
 		</pipeline>
 	</pipelines>
+
+	<interface>
+		<window label="settings" >
+			<pipelineList label="Parametros" />
+			<var label="Cloud layer_Height" type="COLOR" context="Voxels::showVoxels" 
+					component="layer_Height" def="min=1 max=10 step=0.5" />
+			
+		</window>
+	</interface>
 </project>
