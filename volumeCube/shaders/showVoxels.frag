@@ -67,6 +67,19 @@ double HeightSignal(vec3 pos, double h_start, double h_cloud) {
     return r; 
 }
 
+float density_gradient_stratus(const float h){
+    return max(smoothstep(0.00, 0.07, h) - smoothstep(0.07, 0.11, h), 0); // stratus, could be better
+}
+
+float density_gradient_cumulus(const float h){
+    return max(smoothstep(0.00, 0.22, h) - smoothstep(0.4, 0.62, h), 0); // cumulus
+    //return smoothstep(0.3, 0.35, h) - smoothstep(0.425, 0.7, h); // cumulus
+}
+
+float density_gradient_cumulonimbus(const float h){
+    return smoothstep(0.0, 0.1, h) - smoothstep(0.7, 1.0, h); // cumulonimbus
+}
+
 double HeightGradient(vec3 pos, double h_start, double h_cloud) {
     // Altura da caixa é 2 ...
     double atm = pos.y*layer_Height;
@@ -170,7 +183,19 @@ void main() {
         
         // Only use positive densitys after erosion ! 
         if(density > 0){ 
-            density *= HeightGradient(pos, weather.b, weather.g);
+            //density *= HeightGradient(pos, weather.b, weather.g);
+            
+            // Nuvens rasteiras e com pouca altura 
+            if((weather.b < 0.1) && (weather.g < 0.3) ){ 
+                density *= density_gradient_stratus(pos.y); 
+            }
+            else 
+                if((weather.b < 0.5) && (weather.g < 0.6)){ 
+                    density *= density_gradient_cumulus(pos.y); 
+            }else{
+                density *= density_gradient_cumulonimbus(pos.y);
+            }
+        
             // clamp density to 1 for more balance lightning
             if(density > 1) {density = 1; }
 
