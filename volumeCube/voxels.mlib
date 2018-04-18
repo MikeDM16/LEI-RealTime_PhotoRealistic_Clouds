@@ -98,6 +98,9 @@
 					<valueof uniform="layer_Height" 	type="COLOR" context="CURRENT"
 															component="layer_Height" />								
 					
+					<valueof uniform="LightPos" 		type="LIGHT" context="Sun"
+														component="POSITION" />
+
 					<valueof uniform="aabbMin" 	type="PASS" context="CURRENT"
 														component="aabbMin" />
 					<valueof uniform="aabbMax" 	type="PASS" context="CURRENT"

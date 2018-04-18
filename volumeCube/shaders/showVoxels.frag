@@ -67,6 +67,49 @@ double HeightSignal(vec3 pos, double h_start, double h_cloud) {
     return r; 
 }
 
+//--- Fase da shape  ---
+double getShape(vec3 pos){ 
+    // Normalize the coords for the 3D noise size 
+    vec3 aux = vec3(pos);
+    aux.xyz *= shapeHeight;
+    aux.x = floor(aux.y)*shapeHeight + aux.x;
+    vec2 textCoord = aux.xz;
+
+    /*
+    double r = 0;
+    int kernel_size = 2; 
+    for(int i = -1; i<kernel_size; i++){
+        for(int j = -1; i<kernel_size; i++)
+            for(int k = -1; i<kernel_size; i++)
+                r += texelFetch(shapeNoise, ivec2(textCoord) + ivec2(i +k*shapeHeight, j), level).r;
+    }
+    
+    //return r / (3*3*3);*/
+    return texelFetch(shapeNoise, ivec2(textCoord), level).r;
+}
+
+//--- Fase da Erosion ---
+double getErosion(vec3 pos){
+    // Normalize the coords for the 3D noise size 
+    vec3 aux = vec3(pos);  
+    aux.xyz *= erosionHeight;
+    aux.x = floor(aux.y)*erosionHeight + aux.x;
+    vec2 textCoord = aux.xz;
+
+    /*
+    double r = 0;
+    int kernel_size = 2; 
+    for(int i = -1; i<kernel_size; i++){
+        for(int j = -1; i<kernel_size; i++)
+            for(int k = -1; i<kernel_size; i++)
+                r += texelFetch(erosionNoise, ivec2(textCoord) + ivec2(i +k*erosionHeight, j), level).r;
+    }
+    
+    //return r / (3*3*3);*/
+    
+    return texelFetch(erosionNoise, ivec2(textCoord), level).r;
+}
+
 float density_gradient_stratus(const float h){
     return max(smoothstep(0.00, 0.07, h) - smoothstep(0.07, 0.11, h), 0); // stratus, could be better
 }
@@ -122,13 +165,13 @@ void main() {
         /* ----------------- Tetativa 1 ----------------- 
         vec3 aux = vec3(pos);
         // Passar todas as coordenas do pos para [0,128]
-        aux.xyz *= shapeHeight;
-        aux.x = floor(aux.y)*shapeHeight + aux.x;
+        aux.xz *= shapeHeight;
+        //aux.x = floor(aux.y)*shapeHeight + aux.x;
         vec2 textCoord = aux.xz;
         
         // Assumir que a WeatherTexture é a RGB  e a shape o canal alfa
         vec3 weather = texelFetch(shapeNoise, ivec2(textCoord), level).rgb;
-        double density = weather.r;
+        double density = weather.b;
 
         // Aplicação da função Height signal
         density *= HeightSignal(pos, weather.b, weather.g);
@@ -138,7 +181,7 @@ void main() {
         aux1.xyz *= shapeHeight;
         aux1.x = floor(aux1.y)*shapeHeight + aux1.x;
         vec2 textCoord1 = aux1.xz;
-        density += texelFetch(shapeNoise, ivec2(textCoord1), level).a;
+        density += 0.1*texelFetch(shapeNoise, ivec2(textCoord1), level).b;
         
         //--- Fase da Erosion ---
         vec3 aux2 = vec3(pos);  
@@ -147,40 +190,8 @@ void main() {
         vec2 textCoord2 = aux2.xz;
         density -= texelFetch(erosionNoise, ivec2(textCoord2), level).b;
         
-        density *= HeightGradient(pos, weather.b, weather.g);
+        //density *= HeightGradient(pos, weather.b, weather.g);
 
-        if(density > 0){ color += 0.01*vec4(density);  }*/
-
-        
-
-        // ----------------- Tetativa 2 ----------------- 
-        vec3 aux = vec3(pos);
-        aux.x *= weatherHeight;
-        aux.z *= weatherWidth;
-        //aux.x = floor(aux.y)*(weatherHeight) + aux.x;
-        vec2 textCoord = aux.xz;    
-
-        // Densidade inicial obtida da weather texture
-        vec3 weather = texelFetch(weatherTexture, ivec2(textCoord), level).rgb;
-        double density = weather.r;
-    
-        // Aplicação da função Height signal
-        density *= HeightSignal(pos, weather.b, weather.g);
-
-        //--- Fase da shape  ---
-        vec3 aux1 = vec3(pos);
-        aux1.xyz *= shapeHeight;
-        aux1.x = floor(aux1.y)*shapeHeight + aux1.x;
-        vec2 textCoord1 = aux1.xz;
-        density += texelFetch(shapeNoise, ivec2(textCoord1), level).r;
-
-        //--- Fase da shape + Erosion ---
-        vec3 aux2 = vec3(pos);  
-        aux2.xyz *= erosionHeight;
-        aux2.x = floor(aux2.y)*erosionHeight + aux2.x;
-        vec2 textCoord2 = aux2.xz;
-        density -=  texelFetch(erosionNoise, ivec2(textCoord2), level).r;
-        
         // Only use positive densitys after erosion ! 
         if(density > 0){ 
             //density *= HeightGradient(pos, weather.b, weather.g);
@@ -200,10 +211,50 @@ void main() {
             if(density > 1) {density = 1; }
 
             color += 0.01*vec4(density);  
-        }
+        }*/
+
         
-       
-                
+
+        // ----------------- Tetativa 2 ----------------- 
+        vec3 aux = vec3(pos);
+        aux.x *= weatherHeight;
+        aux.z *= weatherWidth;
+        //aux.x = floor(aux.y)*(weatherHeight) + aux.x;
+        vec2 textCoord = aux.xz;    
+
+        // Densidade inicial obtida da weather texture
+        vec3 weather = texelFetch(weatherTexture, ivec2(textCoord), level).rgb;
+        double density = weather.r;
+    
+        // Aplicação da função Height signal
+        density *= HeightSignal(pos, weather.b, weather.g);
+
+        //--- Fase da Shape  ---
+        density += getShape(pos);
+
+        //--- Fase da Erosion ---
+        density -= getErosion(pos); 
+        
+        // Only use positive densitys after erosion ! 
+        if(density > 0){ 
+            //density *= HeightGradient(pos, weather.b, weather.g);
+            
+            // Nuvens rasteiras e com pouca altura 
+            if((weather.b < 0.1) && (weather.g < 0.3) ){ 
+                density *= density_gradient_stratus(pos.y); 
+            }else
+                if((weather.b < 0.5) && (weather.g < 0.6)) 
+                    density *= density_gradient_cumulus(pos.y); 
+                else 
+                    density *= density_gradient_cumulonimbus(pos.y);
+        
+            // clamp density to 1 for more balance lightning
+            if(density > 1)   
+                density = 1; 
+
+            color += 0.01*vec4(density);  
+        }
+
         //pos = aux;
         pos += step;
     }
