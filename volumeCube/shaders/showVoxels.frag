@@ -158,8 +158,8 @@ void main() {
     vec3 step = (rayStop-rayStart) / float(steps);
     vec3 pos = rayStart + 0.5 * step;
     int travel = steps;
-	//vec4 color = vec4(0.2 , 0.5, 1.0, 1.0);
-	vec4 color = vec4(0.0 , 0.0, 0.0, 0.0);
+	//vec4 color = vec4(0.2 , 0.5, 1.0, 0.0);
+	vec4 color = vec4(0.2 , 0.2, 0.2, 0.0);
     //vec4 color = vec4(0.0);
     
     for (;  /*color.w == 0  && */ travel != 0;  travel--) {
@@ -258,7 +258,7 @@ void main() {
             if(density > 1)   
                 density = 1; 
 
-            color += 0.01*vec4(density);  
+            color += 0.02*vec4(density);  
         }
         
         pos += step;
