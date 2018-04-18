@@ -85,7 +85,9 @@ double getShape(vec3 pos){
     }
     
     //return r / (3*3*3);*/
+
     return texelFetch(shapeNoise, ivec2(textCoord), level).r;
+
 }
 
 //--- Fase da Erosion ---
@@ -96,7 +98,6 @@ double getErosion(vec3 pos){
     aux.x = floor(aux.y)*erosionHeight + aux.x;
     vec2 textCoord = aux.xz;
 
-    /*
     double r = 0;
     int kernel_size = 2; 
     for(int i = -1; i<kernel_size; i++){
@@ -105,7 +106,7 @@ double getErosion(vec3 pos){
                 r += texelFetch(erosionNoise, ivec2(textCoord) + ivec2(i +k*erosionHeight, j), level).r;
     }
     
-    //return r / (3*3*3);*/
+    return r / (3*3*3);
     
     return texelFetch(erosionNoise, ivec2(textCoord), level).r;
 }
@@ -124,7 +125,6 @@ float density_gradient_cumulonimbus(const float h){
 }
 
 double HeightGradient(vec3 pos, double h_start, double h_cloud) {
-    // Altura da caixa é 2 ...
     double atm = pos.y*layer_Height;
     return atm;
 }
@@ -158,7 +158,8 @@ void main() {
     vec3 step = (rayStop-rayStart) / float(steps);
     vec3 pos = rayStart + 0.5 * step;
     int travel = steps;
-	vec4 color = vec4(0.2, 0.5, 1.0, 1.0);
+	//vec4 color = vec4(0.2 , 0.5, 1.0, 1.0);
+	vec4 color = vec4(0.0 , 0.0, 0.0, 0.0);
     //vec4 color = vec4(0.0);
     
     for (;  /*color.w == 0  && */ travel != 0;  travel--) {
@@ -230,11 +231,15 @@ void main() {
         density *= HeightSignal(pos, weather.b, weather.g);
 
         //--- Fase da Shape  ---
-        density += getShape(pos);
+        density *= getShape(pos);
 
         //--- Fase da Erosion ---
         density -= getErosion(pos); 
         
+        aux = vec3(pos);
+        aux.xyz *= shapeHeight;
+        aux.x = floor(aux.y)*shapeHeight + aux.x;
+        textCoord = aux.xz;
         // Only use positive densitys after erosion ! 
         if(density > 0){ 
             //density *= HeightGradient(pos, weather.b, weather.g);
@@ -243,9 +248,10 @@ void main() {
             if((weather.b < 0.1) && (weather.g < 0.3) ){ 
                 density *= density_gradient_stratus(pos.y); 
             }else
-                if((weather.b < 0.5) && (weather.g < 0.6)) 
+                if((weather.b < 0.5) && (weather.g < 0.6)){ 
                     density *= density_gradient_cumulus(pos.y); 
-                else 
+                    //density = texelFetch(shapeNoise, ivec2(textCoord), level).a;
+                }else 
                     density *= density_gradient_cumulonimbus(pos.y);
         
             // clamp density to 1 for more balance lightning
@@ -254,8 +260,7 @@ void main() {
 
             color += 0.01*vec4(density);  
         }
-
-        //pos = aux;
+        
         pos += step;
     }
 

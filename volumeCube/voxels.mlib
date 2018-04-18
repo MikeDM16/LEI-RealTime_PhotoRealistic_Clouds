@@ -48,8 +48,12 @@
 			<CULL_FACE value=0 />
 			<DEPTH_TEST value=0 />
 		</state>
-		<state name="NoCull">
+
+		<state name="Blend-NoCull">
 			<CULL_FACE value=0 />
+			<BLEND value=True />
+			<BLEND_SRC value=SRC_ALPHA />
+			<BLEND_DST value=ONE_MINUS_SRC_ALPHA />
 		</state>	
 		
 	</states>
@@ -133,7 +137,7 @@
 
 			</textures>
 			
-			<state name="NoCull" />
+			<state name="Blend-NoCull" />
 		</material>
 
 
