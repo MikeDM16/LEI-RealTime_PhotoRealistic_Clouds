@@ -64,10 +64,12 @@ double HeightSignal(vec3 pos, double h_start, double h_cloud) {
     // isto se calhar têm todos que ser convertidos para a escala do tamanho da layer
 
     // Altura da caixa é 3 ...
+
     double atm = pos.y * layer_Height;
     double r  = (atm - h_start)*(atm - h_start - h_cloud);
     r *= (-4 / (h_cloud * h_cloud + 0.00001));
     return r;
+
 }
 
 //--- Fase da shape  ---
@@ -133,9 +135,22 @@ double HeightGradient(vec3 pos, double h_start, double h_cloud) {
     double atm = pos.y*layer_Height;
     return atm;
 }
+
+double calcAbsorption();
+double calcExctintion();
+double calcTransmittance();
+double calcLight(){
+    double sigma = calcAbsorption();
+    double transmission = calcTransmittance();
+    double exct = calcExctintion();
+
+    // integrar
+}
+
+
 void main() {
 
-	float FocalLength = 1.0/ tan(radians(FOV*0.5));
+float FocalLength = 1.0/ tan(radians(FOV*0.5));
   vec3 rayDirection;
   rayDirection.xy = 2.0 * gl_FragCoord.xy / WindowSize.xy - 1.0;
   rayDirection.xy *= vec2(RATIO,1);
