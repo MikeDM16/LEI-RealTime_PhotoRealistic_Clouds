@@ -22,7 +22,7 @@
 	<textures>
 		<texture name="shapeNoise" 	filename="texturas/noiseShape.tga" />
 		<texture name="erosionNoise" filename="texturas/noiseErosion.tga" />
-		<texture name="weatherTexture" filename="texturas/weatherTexture2.jpg" />
+		<texture name="weatherTexture" filename="texturas/weatherTexture.jpg" />
 	</textures>
 
 	<buffers>
