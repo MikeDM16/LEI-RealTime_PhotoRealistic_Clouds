@@ -3,6 +3,7 @@
 out vec4 FragColor;
 
 uniform vec4 lDiffuse;
+uniform vec4 lPosition;
 
 in Data {
 	vec3 l_dir;
@@ -62,6 +63,8 @@ bool IntersectBox(Ray r, out float t0, out float t1)
 	 t1 = min(tmax.x, min(tmax.y, tmax.z));
    return t0 <= t1;
 }
+
+
 
 double HeightSignal(vec3 pos, double h_start, double h_cloud) {
     // h_start = altitude onde inicia a nuvem
@@ -147,6 +150,51 @@ double HeightGradient(vec3 pos, double h_start, double h_cloud) {
 }
 //------------------------------------------------------------------------
 
+/* ----- Função para determinar a densidade numa determinada posição ----- */
+double getDensity(vec3 pos){
+    vec3 aux = vec3(pos);
+    aux.x *= weatherHeight;
+    aux.z *= weatherWidth;
+    //aux.x = floor(aux.y)*(weatherHeight) + aux.x;
+    vec2 textCoord = aux.xz;
+
+    // Densidade inicial obtida da weather texture
+    vec3 weather = texelFetch(weatherTexture, ivec2(textCoord), level).rgb;
+    double density = weather.r;
+
+    // Aplicação da função Height signal
+    density *= HeightSignal(pos, weather.b, weather.g);
+
+    //--- Fase da Shape  ---
+    density *= getShape(pos);
+
+    //--- Fase da Erosion ---
+    density -= getErosion(pos);
+
+    // Only use positive densitys after erosion !
+    if(density > 0){
+        //density *= HeightGradient(pos, weather.b, weather.g);
+
+        // Nuvens rasteiras e com pouca altura
+        if((weather.b < 0.1) && (weather.g < 0.3) ){
+            density *= density_gradient_stratus(pos.y);
+        }else
+            if((weather.b < 0.5) && (weather.g < 0.6)){
+                density *= density_gradient_cumulus(pos.y);
+                //density = texelFetch(shapeNoise, ivec2(textCoord), level).a;
+            }else
+                density *= density_gradient_cumulonimbus(pos.y);
+
+        // clamp density to 1 for more balance lightning
+        if(density > 1)
+            density = 1;
+    }
+
+    return density;
+}
+
+//------------------------------------------------------------------------
+
 
 //------------------ Função Absorção ---------------------------------------
 /*  Absorption coefficiente is the probability that a photon is absorbed when 
@@ -217,7 +265,7 @@ float calcExctintion(vec3 step_dir){
 
 /*   Transmittance Tr is the amount of photos that travels unobstructed between
  two points along a straight line. The transmittance can be calculated using
- Beer-Lambert’s law      */
+ Beer-Lambert’s law     */
 float calcTransmittance(){
     // Calcular integral Tr entre x0 e x1, sumando os trans_coefs de cada step
     float int_trans_coef = 0;
@@ -251,6 +299,61 @@ vec4 simplesLambert(){
     return sun_color; 
 }
 
+/* Determinate the direct light coming from the light source and possibly ocluded 
+from other clouds 
+   - Does another Ray Marching through the volume, but from the step_pos to the sun position
+   - Evalute the step_position density in every step of Ray Marching
+   - Ultra-Mega fps killer */
+vec4 computDirectLight(vec3 step_pos){
+    // Create an Ray from the step position to the light source 
+    vec3 dir_to_sun = vec3(lPosition) - step_pos; 
+    Ray ray_to_sun = Ray( step_pos, normalize(dir_to_sun) );
+
+    // Same code to adjust the iterations to the box size 
+    float tnear, tfar;
+    bool r = IntersectBox(ray_to_sun, tnear, tfar);
+    if (tnear < 0.0) tnear = 0.0;
+
+    vec3 rayStart = ray_to_sun.Origin + ray_to_sun.Dir * tnear;
+    vec3 rayStop = ray_to_sun.Origin + ray_to_sun.Dir * tfar;
+
+    vec3 len = aabbMax - aabbMin;
+    rayStart = 1/len * (rayStart -aabbMin);
+    rayStop = 1/len * (rayStop -aabbMin);
+
+    double larg = aabbMax.x - aabbMin.x;
+    double cump = aabbMax.z - aabbMin.z;
+    double alt  = aabbMax.y - aabbMin.y;
+
+    // !!! More steps sadly kill the performance and leds to a NAU crash  
+    // Using 10, 50 or 100 does not change anything visually... but why ? 
+    int steps = 10; //int(0.5 + distance(rayStop, rayStart)  * float(GridSize) * 2);
+    vec3 step = (rayStop-rayStart) / float(steps);
+    vec3 pos = rayStart + 0.5 * step;
+    int travel = steps;
+
+    // compute the possible oclusion of other clouds to the direct sun light 
+    vec4 color = vec4(lDiffuse.rgb, 1);
+    //vec4 color = vec4(0);
+    for (; travel != 0;  travel--) {
+        double density = getDensity(pos);
+        color -= vec4(density);
+        pos += step;
+    }
+
+    return vec4(color.rgb,1); 
+    // starting the color whit vec4(0) and then subtrating the densitys does
+    // the same effect
+    //return vec4(lDiffuse.rgb, 1) - vec4(color.rgb,0); 
+}
+
+vec4 evaluateLight(double densidade, vec3 pos){
+    vec4 sun_light = computDirectLight(pos);
+    return sun_light;
+}
+
+
+
 void main() {
 
     float FocalLength = 1.0/ tan(radians(FOV*0.5));
@@ -281,51 +384,21 @@ void main() {
     vec3 step = (rayStop-rayStart) / float(steps);
     vec3 pos = rayStart + 0.5 * step;
     int travel = steps;
-        //vec4 color = vec4(0.2 , 0.5, 1.0, 0.0);
-        vec4 color = vec4(0.2 , 0.2, 0.2, 0.0);
+    //vec4 color = vec4(0.2 , 0.5, 1.0, 0.0);
+    vec4 color = vec4(0.2 , 0.2, 0.2, 0.0);
     //vec4 color = vec4(0.0);
 
     for (;  /*color.w == 0  && */ travel != 0;  travel--) {
-        vec3 aux = vec3(pos);
-        aux.x *= weatherHeight;
-        aux.z *= weatherWidth;
-        //aux.x = floor(aux.y)*(weatherHeight) + aux.x;
-        vec2 textCoord = aux.xz;
-
-        // Densidade inicial obtida da weather texture
-        vec3 weather = texelFetch(weatherTexture, ivec2(textCoord), level).rgb;
-        double density = weather.r;
-
-        // Aplicação da função Height signal
-        density *= HeightSignal(pos, weather.b, weather.g);
-
-        //--- Fase da Shape  ---
-        density *= getShape(pos);
-
-        //--- Fase da Erosion ---
-        density -= getErosion(pos);
-
-        // Only use positive densitys after erosion !
+        // Evaluate the density in this position, based on the weather, shape 
+        // and noise textures
+        double density = getDensity(pos);
+        
+        /*Lighting is evaluated for every sample that returned a density larger 
+        than zero, when ray marching through the atmosphere (pág 27 Tese)*/
         if(density > 0){
-            //density *= HeightGradient(pos, weather.b, weather.g);
-
-            // Nuvens rasteiras e com pouca altura
-            if((weather.b < 0.1) && (weather.g < 0.3) ){
-                density *= density_gradient_stratus(pos.y);
-            }else
-                if((weather.b < 0.5) && (weather.g < 0.6)){
-                    density *= density_gradient_cumulus(pos.y);
-                    //density = texelFetch(shapeNoise, ivec2(textCoord), level).a;
-                }else
-                    density *= density_gradient_cumulonimbus(pos.y);
-
-            // clamp density to 1 for more balance lightning
-            if(density > 1)
-                density = 1;
-
             vec4 l = simplesLambert();
-            color += 0.05*l;
-            //color += 0.1*vec4(density);
+            vec4 light = evaluateLight(density, pos);
+            color += 0.02*light;
         }
 
         pos += step;
