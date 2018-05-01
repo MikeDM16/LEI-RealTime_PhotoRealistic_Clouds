@@ -234,11 +234,14 @@ vec4 computDirectLight(vec3 step_pos){
     int travel = steps;
 
     // compute the possible oclusion of other clouds to the direct sun light 
-    //vec4 color = vec4(0);
-    vec4 color = vec4(lDiffuse.rgb, 1);
+    vec4 color = vec4(0,0,0,1);
+    //vec4 color = vec4(lDiffuse.rgb, 1);
+    vec4 l_sun = vec4(lDiffuse.rgb, 1); 
+
     for (travel = 0; travel != 6; travel++) {
         double density = getDensity(pos);
-        color -= vec4(density);
+        color += 2 * l_sun *  float(density);
+
         /*Marching towards the sun has a great impact on performance since for 
         every step an extra number of steps has to be taken. 
         In our implementation four steps towards the sun are taken at 
@@ -253,8 +256,8 @@ vec4 computDirectLight(vec3 step_pos){
     vec4 sun_color = vec4(1, 1, 0.9, 1);
     color *= float(intensidade); 
     */ 
-
-    return vec4(color.rgb, 0.8); 
+    
+    return vec4(color.rgba); 
     // starting the color whit vec4(0) and then subtrating the densitys does
     // the same effect (as espected )
     //return vec4(lDiffuse.rgb, 1) - vec4(color.rgb,0); 
@@ -303,10 +306,12 @@ vec4 calcScattering(float scatter_coef, vec3 step_pos, vec3 dir_to_sun, vec3 ste
     //float phase =  phase_functionCS(scatter_coef, dir_to_sun, step_dir);
 
     vec4 sun_light = computDirectLight(step_pos);
-    vec4 ambiente_light = vec4(1);
+    vec4 ambiente_light = vec4(0.4,0.4,0.4,1);
 
     // Compute S 
     // Multiply by scatter_coef takes a lot of detail :( 
+    // Basicamente toda a cor vem da luz ambiente. why ???? 
+    // Deve haver chatice na ComputDirectLight 
     return (sun_light*phase + ambiente_light); //* scatter_coef;
 
 }

@@ -15,6 +15,13 @@ struct AABB {
     vec3 Max;
 };
 
+in Data {
+	vec3 l_dir;
+} Datain[];
+
+out Data {
+	vec3 l_dir;
+} DataOut;
 
 void emit_vert(int vert)
 {
