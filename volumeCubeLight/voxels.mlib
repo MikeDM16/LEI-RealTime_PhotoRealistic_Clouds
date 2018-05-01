@@ -102,6 +102,12 @@
 
 					<valueof uniform="layer_Height" 	type="COLOR" context="CURRENT"
 															component="layer_Height" />
+					<valueof uniform="sigmaScattering" 	type="COLOR" context="CURRENT"
+															component="sigmaScattering" />
+					<valueof uniform="sigmaExtintion" 	type="COLOR" context="CURRENT"
+															component="sigmaExtintion" />
+					<valueof uniform="sigmaAbsorption" 	type="COLOR" context="CURRENT"
+															component="sigmaAbsorption" />
 
 					<valueof uniform="lDir" type="LIGHT" context="Sun"
 														component="DIRECTION" />

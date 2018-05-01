@@ -31,6 +31,8 @@ void emit_face(int face)
 
 void main()
 {
+    // DataOut.l_dir = DataIn.l_dir; 
+
 	//AABB aabb = AABB(vec3(-2.0), vec3(-1));
 	
     faces[0] = ivec4(0,1,3,2); faces[1] = ivec4(5,4,6,7);

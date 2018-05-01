@@ -4,11 +4,13 @@ out vec4 FragColor;
 
 uniform vec4 lDiffuse;
 uniform vec4 lPosition;
+uniform vec4 lDir; 
+uniform	mat4 m_view;
 
-in Data {
+/*in Data {
 	vec3 l_dir;
 } DataIn;
-
+*/
 
 uniform sampler2D shapeNoise;
 uniform int shapeWidth;
@@ -34,7 +36,10 @@ uniform vec3 aabbMin, aabbMax;
 
 // Parameters from inteface
 uniform float layer_Height;
-uniform float scatter_coef = 0.5;
+uniform float sigmaScattering;
+uniform float sigmaExtintion;
+uniform float sigmaAbsorption;
+
 uniform float P_abs_coef = 0.2;
 
 
@@ -65,7 +70,7 @@ bool IntersectBox(Ray r, out float t0, out float t1)
 }
 
 
-
+//------------------------------------------------------------------------
 double HeightSignal(vec3 pos, double h_start, double h_cloud) {
     // h_start = altitude onde inicia a nuvem
     // h_cloud = altura da nuvem, conforme o volume da mesma
@@ -82,7 +87,7 @@ double HeightSignal(vec3 pos, double h_start, double h_cloud) {
     return r;
 
 }
-
+//------------------------------------------------------------------------
 
 // -------- Funções de Shape -> gives general form to the cloud  ---------- */
 double getShape(vec3 pos){
@@ -192,113 +197,9 @@ double getDensity(vec3 pos){
 
     return density;
 }
-
 //------------------------------------------------------------------------
 
-
-//------------------ Função Absorção ---------------------------------------
-/*  Absorption coefficiente is the probability that a photon is absorbed when 
- traveling through the cloud
-    P_abs_coef is an interface parameter for the probability 
-    f(x) = e^(-absor_coef_x) * L(x,w)       */
-float calcAbsorption(){
-    float absor_coef = P_abs_coef; // interface parameter
-
-    float intensidade = 1; // Como 
-
-    return exp(-absor_coef) * intensidade;
-}
-
-// -------------------- Funções de Fase para scattering ------------------ */
-/*  Henyey-Greenstein function:
-        light : direção da luz
-        step_dir : "direção da camara" no percurso do Ray Marching
-    f(x) = (1 - g^2) / (4PI * (1 + g^2 - 2g*cos(teta))^[3/2])        */
-float phase_functionHG(vec3 light, vec3 step_dir) {
-	double pi = 3.14159;
-
-    // 1 - g^2
-	float n = 1 - pow(scatter_coef, 2); 
-	
-    // 1 + g^2 - 2g*cos(x)
-    float cos_teta = dot(light,step_dir); // cos(x)
-	float d = 1 + pow(scatter_coef,2) - 2*scatter_coef*cos_teta; 
-    
-    return float(n  / (4*pi * pow(d, 1.5f)));
-}
-/*  Cornette-Shank aproach
-    This phase function is also well suited for clouds but is more 
- time consuming to calculate
-    f(x) = 3*(1 - g^2) *       (1 + cos^2(teta))
-           2*(2 + g^2)   (1 + g^2 -2g*cos(teta^[3/2]))  */
-float phase_functionCS(vec3 light, vec3 step_dir) {
-	double pi = 3.14159;
-
-	// 3*(1 - g^2) / 2*(2 + g^2)
-	float n = (3/2) * (1 - pow(scatter_coef, 2))/(2+pow(scatter_coef, 2)); 
-	
-    // (1 + cos^2(teta)) / (1 + g^2 -2g*cos(teta^[3/2]))
-    float cos_teta = dot(light,step_dir); // cos(x)
-	float d = 1 + pow(scatter_coef,2) - 2*scatter_coef*cos_teta; 
-    return n * (1 + pow(cos_teta, 2)) / pow(d, 1.5);
-}
-float calcScattering(vec3 step_dir){
-    vec3 light = vec3(0.4); // uniform com light dir 
-    
-    // Henyey-Greenstein function:
-    return phase_functionHG(light, step_dir);
-    // or Cornette-Shank aproach
-    return phase_functionCS(light, step_dir);
-}
 //------------------------------------------------------------------------
-
-// ------------ Funções Extintion e Transmittance ------------------------ 
-float calcExctintion(vec3 step_dir){
-    float absor_coef = calcAbsorption();
-    float scatter_coef = calcScattering(step_dir); 
-
-    // sigma_T = sigma_A + sigma_S
-    float trans_coef = absor_coef + scatter_coef; 
-
-    return trans_coef; 
-}
-
-/*   Transmittance Tr is the amount of photos that travels unobstructed between
- two points along a straight line. The transmittance can be calculated using
- Beer-Lambert’s law     */
-float calcTransmittance(){
-    // Calcular integral Tr entre x0 e x1, sumando os trans_coefs de cada step
-    float int_trans_coef = 0;
-
-    /*for(x = x0, x != x1, x += step){
-        int_trans_coef += calcExctintion(x); 
-    }*/
-
-    return exp(-int_trans_coef);
-}
-//------------------------------------------------------------------------
-
-
-double calcLight(){
-    double sigma = calcAbsorption();
-    double transmission = calcTransmittance();
-
-    // integrar
-
-    return 1.0;
-}
-
-vec4 simplesLambert(){
-    vec3 ld_n = normalize(vec3(6,1,2));
-    vec3 n = vec3(0,1,0);
-
-    double intensidade = max( dot(ld_n, n), 0.0);
-    vec4 sun_color = vec4(1, 1, 0.9, 1);
-    sun_color *= vec4(intensidade);
-
-    return sun_color; 
-}
-
 /* Determinate the direct light coming from the light source and possibly ocluded 
 from other clouds 
    - Does another Ray Marching through the volume, but from the step_pos to the sun position
@@ -327,32 +228,149 @@ vec4 computDirectLight(vec3 step_pos){
 
     // !!! More steps sadly kill the performance and leds to a NAU crash  
     // Using 10, 50 or 100 does not change anything visually... but why ? 
-    int steps = 10; //int(0.5 + distance(rayStop, rayStart)  * float(GridSize) * 2);
+    int steps = int(0.5 + distance(rayStop, rayStart)  * float(GridSize) * 2);
     vec3 step = (rayStop-rayStart) / float(steps);
     vec3 pos = rayStart + 0.5 * step;
     int travel = steps;
 
     // compute the possible oclusion of other clouds to the direct sun light 
-    vec4 color = vec4(lDiffuse.rgb, 1);
     //vec4 color = vec4(0);
-    for (; travel != 0;  travel--) {
+    vec4 color = vec4(lDiffuse.rgb, 1);
+    for (travel = 0; travel != 6; travel++) {
         double density = getDensity(pos);
         color -= vec4(density);
-        pos += step;
+        /*Marching towards the sun has a great impact on performance since for 
+        every step an extra number of steps has to be taken. 
+        In our implementation four steps towards the sun are taken at 
+        exponentially increasing steps size (pág 29 tese)*/
+        pos += pow(4, travel) * step;
     }
 
-    return vec4(color.rgb,1); 
+    /* //So, if i knew the normal, can i also use the intensity ? 
+    vec3 n = vec3(0,1,0);
+    vec3 ld_n = normalize(vec3(m_view * -lDir));
+    double intensidade = max( dot(ld_n, n), 0.0);
+    vec4 sun_color = vec4(1, 1, 0.9, 1);
+    color *= float(intensidade); 
+    */ 
+
+    return vec4(color.rgb, 0.8); 
     // starting the color whit vec4(0) and then subtrating the densitys does
-    // the same effect
+    // the same effect (as espected )
     //return vec4(lDiffuse.rgb, 1) - vec4(color.rgb,0); 
 }
+//------------------------------------------------------------------------
 
-vec4 evaluateLight(double densidade, vec3 pos){
-    vec4 sun_light = computDirectLight(pos);
-    return sun_light;
+
+// -------------------- Funções de Fase para scattering ------------------ */
+/*  Henyey-Greenstein function (Mie Phase Function):
+        light : direção da luz
+        step_dir : "direção da camara" no percurso do Ray Marching
+    f(x) = (1 - g^2) / (4PI * (1 + g^2 - 2g*cos(teta))^[3/2])        */
+float phase_functionHG(float scatter_coef, vec3 light, vec3 step_dir) {
+	double pi = 3.14159;
+
+    // 1 - g^2
+	float n = 1 - pow(scatter_coef, 2); 
+	
+    // 1 + g^2 - 2g*cos(x)
+    float cos_teta = dot(light,step_dir); // cos(x)
+	float d = 1 + pow(scatter_coef,2) - 2*scatter_coef*cos_teta; 
+    
+    return float(n  / (4*pi * pow(d, 1.5f)));
+}
+/*  Cornette-Shank aproach
+    This phase function is also well suited for clouds but is more 
+ time consuming to calculate
+    f(x) = 3*(1 - g^2) *       (1 + cos^2(teta))
+           2*(2 + g^2)   (1 + g^2 -2g*cos(teta^[3/2]))  */
+float phase_functionCS(float scatter_coef, vec3 light, vec3 step_dir) {
+	double pi = 3.14159;
+
+	// 3*(1 - g^2) / 2*(2 + g^2)
+	float n = (3/2) * (1 - pow(scatter_coef, 2))/(2+pow(scatter_coef, 2)); 
+	
+    // (1 + cos^2(teta)) / (1 + g^2 -2g*cos(teta^[3/2]))
+    float cos_teta = dot(light,step_dir); // cos(x)
+	float d = 1 + pow(scatter_coef,2) - 2*scatter_coef*cos_teta; 
+    return n * (1 + pow(cos_teta, 2)) / pow(d, 1.5);
 }
 
+vec4 calcScattering(float scatter_coef, vec3 step_pos, vec3 dir_to_sun, vec3 step_dir){
+    // Henyey-Greenstein function:
+    float phase =  phase_functionHG(scatter_coef, dir_to_sun, step_dir);
+    // or Cornette-Shank aproach
+    //float phase =  phase_functionCS(scatter_coef, dir_to_sun, step_dir);
 
+    vec4 sun_light = computDirectLight(step_pos);
+    vec4 ambiente_light = vec4(1);
+
+    // Compute S 
+    // Multiply by scatter_coef takes a lot of detail :( 
+    return (sun_light*phase + ambiente_light); //* scatter_coef;
+
+}
+//------------------------------------------------------------------------
+
+//------------------ Função Absorção ---------------------------------------
+/*  Absorption coefficiente is the probability that a photon is absorbed when 
+ traveling through the cloud
+    P_abs_coef is an interface parameter for the probability 
+    f(x) = e^(-absor_coef_x) * L(x,w)       */
+float calcAbsorption(vec3 step_pos, float density){
+    float absor_coef = sigmaAbsorption; // interface parameter
+    //vec4 sun_light = computDirectLight(step_pos);
+    return exp(-absor_coef * density);
+}
+//------------------------------------------------------------------------
+
+// ------------ Funções Extintion e Transmittance ------------------------ 
+// Never used.... 
+float calcExctintion(vec3 step_pos, vec3 step_dir, float density){
+    // sigma_A
+    float absor_coef = calcAbsorption(step_pos, density);
+  
+    // sigma_S
+    float scatter_coef; // ? 
+
+    // sigma_T = sigma_A + sigma_S
+    float trans_coef = absor_coef + scatter_coef; 
+
+    return trans_coef; 
+}
+//------------------------------------------------------------------------
+
+//------------------------------------------------------------------------
+/*   Transmittance Tr is the amount of photos that travels unobstructed between
+ two points along a straight line. The transmittance can be calculated using
+    --> Beer-Lambert’s law     */
+float calcTransmittance(float sampleSigmaE, vec3 step_pos, vec3 step_dir){
+    // Calcular integral Tr entre x0 e x1, sumando os coeficiente extinção de cada step
+
+    float stepdir = length(step_dir);
+
+    // formula pág 28 tese
+    return exp(- sampleSigmaE * stepdir);
+}
+//------------------------------------------------------------------------
+
+
+//-- Função para calcular os valores se scattering e transmição numa posição  --
+void computeCoefs(double densidade, vec3 step_pos, vec3 step_dir, out vec4 scattering, out float transmittance){
+    // sigmaScattering is a interface parameter
+    float sampleSigmaS = sigmaScattering * float(densidade);
+    vec3 dir_to_sun = normalize(vec3(lPosition) - step_pos); 
+    vec3 step_dir_n = normalize(step_dir);
+
+    // Compute S 
+    // Multiply by sampleSigmaS takes a lot of detail :( 
+    scattering = calcScattering(sampleSigmaS, step_pos, dir_to_sun, step_dir_n);
+    
+    // Compute Tr 
+    float sampleSigmaE = sigmaExtintion * float(densidade);
+    transmittance = calcTransmittance(sampleSigmaE, step_pos, step_dir);
+}
+//------------------------------------------------------------------------
 
 void main() {
 
@@ -388,6 +406,8 @@ void main() {
     vec4 color = vec4(0.2 , 0.2, 0.2, 0.0);
     //vec4 color = vec4(0.0);
 
+    vec4 scatteredLight = vec4(0,0,0,0); 
+    float transmittance = 1; 
     for (;  /*color.w == 0  && */ travel != 0;  travel--) {
         // Evaluate the density in this position, based on the weather, shape 
         // and noise textures
@@ -396,14 +416,29 @@ void main() {
         /*Lighting is evaluated for every sample that returned a density larger 
         than zero, when ray marching through the atmosphere (pág 27 Tese)*/
         if(density > 0){
-            vec4 l = simplesLambert();
-            vec4 light = evaluateLight(density, pos);
-            color += 0.02*light;
+            vec3 step_dir = vec3(step); 
+            
+            vec4 scattering; 
+            float transmittance_r; 
+            computeCoefs(density, pos, step_dir, scattering, transmittance_r);
+            
+            float sampleSigmaE = sigmaExtintion * float(density);
+            float clampE = max(sampleSigmaE, 0.000001);
+            // improvement by Energy-conserving analytical integration
+            // Pág 38 artigo Frostbite 
+            vec4 Sint = (scattering - scattering*transmittance_r) / clampE;
+            
+            // Evaluate light on the iteration position 
+            scatteredLight += transmittance * Sint;
+            transmittance *= transmittance_r;
+            color += 0.2*scatteredLight;
+            
+            // jabardar só com iluminação "direta" 
+            //vec4 sun_light = computDirectLight(pos);
+            //color += 0.02*sun_light;
         }
-
         pos += step;
     }
-
-    FragColor.rgb = vec3(color);
-    FragColor.a = color.w;
+    
+    FragColor = color;
 }
