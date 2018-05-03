@@ -1,0 +1,159 @@
+<?xml version="1.0" ?>
+<project name="Atmospheric Scattering - RGB" width=800 height = 600>
+
+	
+	<assets>
+		<attributes>
+			<attribute type="RENDERER" name="year" data="INT" value=2017 />
+			<attribute type="RENDERER" name="month" data="INT" value=11  />
+			<attribute type="RENDERER" name="day" data="INT" value=21  />
+			<attribute type="RENDERER" name="decimalHour" data="FLOAT" value=9 />
+			<attribute type="RENDERER" name="ordinalDay" data="INT" value=1 />
+			
+			<attribute type="RENDERER" name="meridian" data="INT" value=0 />
+			<attribute type="RENDERER" name="latitude" data="FLOAT" value= 41.545449/>
+			<attribute type="RENDERER" name="longitude" data="FLOAT" value=-8.426507/>
+			<attribute type="RENDERER" name="sunAngles" data="VEC2" x=0 y=10 />
+			
+			
+			<attribute type="RENDERER" name="hr" data="FLOAT" value=7994 />
+			<attribute type="RENDERER" name="hm" data="FLOAT" value=1200 />
+			<attribute type="RENDERER" name="g" data="FLOAT" value=0.76 />
+			<attribute type="RENDERER" name="betaR" data="VEC3" 
+							x=3.67044e-07 y=1.11688e-06 z=1.80601e-06 />
+			<attribute type="RENDERER" name="waveLengths" data="VEC3" x="700" y="530" z="470" />
+			<attribute type="RENDERER" name="pressure" data="FLOAT" value = "101325" />
+			<attribute type="RENDERER" name="temperature" data="FLOAT" value="0" />
+			<attribute type="RENDERER" name="indexOfRefraction" data = "FLOAT" value = "1.0003" />
+			<attribute type="RENDERER" name="betaM" data="FLOAT" value=5.76e-7 />
+			
+			<attribute type="RENDERER" name="cameraMode" data="INT" value = 0 />
+			<attribute type="RENDERER" name="exposure" data="FLOAT" value = 1.5 />
+			<attribute type="RENDERER" name="steps light ray" data="INT" value = 32 />
+			<attribute type="RENDERER" name="steps" data="INT" value = 32 />
+			<attribute type="RENDERER" name="sampling" data="INT" value = 0 />
+			
+			<attribute type="RENDERER" name="debug" data="VEC3" x=0 y=0 z=0 />
+		</attributes>
+		
+		<scenes>
+			<scene name="plane" >
+				<SCALE x=100 y=100 z=100 />
+				<file name="../../models/plane.obj"/>
+			</scene>
+			<scene name="cube" >
+				
+				<geometry name = "Box" type = "BOX"  material="box" >
+					<TRANSLATE x=0 y=0 z=20 />
+				</geometry>
+			</scene>
+		</scenes>
+		
+		<viewports>
+			<viewport name="MainViewport">
+				<CLEAR_COLOR r="1.0" g="1.0" b="1.0" />
+			</viewport>
+		</viewports>
+		
+		<cameras>
+			<camera name="MainCamera" >
+				<viewport name="MainViewport" />
+				<TYPE value="PERSPECTIVE"/>
+				<FOV value=60/>
+				<NEAR value= 0.001/>
+				<FAR value= 1000/>
+				<POSITION x=0 y=1 z=0 />
+				<VIEW x=0 y=0 z=-1.0 />
+			</camera>
+		</cameras>
+		
+		<lights>
+			<light name="Sun">
+				<DIRECTION x=-2 y=-1 z=-2 />
+			</light>
+		</lights>
+		
+		<materialLibs>
+			<materialLib filename="atmos3.mlib" />
+		</materialLibs>
+	</assets>
+	
+	<pipelines>
+		<pipeline name="atmos" default="true">
+			<preScript script="tChanged" file="interface.lua" />
+			
+			<pass class="quad" name="sky">
+				<viewport name="MainViewport" />
+				<material name="sky" fromLibrary="atmos" />
+			</pass>
+			
+			<pass class="default" name="ground">
+				<COLOR_CLEAR value=false />
+				<scenes>
+					<scene name="plane" />
+					<scene name="cube" />
+				</scenes>
+				<camera name="MainCamera" />
+				<lights>
+					<light name="Sun" />
+				</lights>
+				<materialMaps>
+					<!--map fromMaterial="*"
+						toLibrary="atmos" toMaterial="ground"  /-->
+					<map fromMaterial="box"
+						toLibrary="atmos" toMaterial="box" />
+				</materialMaps>
+			</pass>
+		</pipeline>
+	</pipelines>
+	<interface>
+		<window label="Sky Config" >
+			<var label="g" type="RENDERER" context="CURRENT" component="g" 
+							def="min=-1 max=0.9999 step=0.001" />
+			<var label="atm. pressure" type="RENDERER" context="CURRENT" component="pressure" 
+							def="step=1" script="atmosConfigChanged" scriptFile="interface.lua"/>
+			<var label="temp. (C)" type="RENDERER" context="CURRENT" component="temperature" 
+							def="step=0.1" script="atmosConfigChanged" scriptFile="interface.lua"/>
+			<var label="index of reftract." type="RENDERER" context="CURRENT" 
+							component="indexOfRefraction" 
+							def="min=1.00001 max=1.00200 step=0.00001" script="atmosConfigChanged" scriptFile="interface.lua"/>
+			<var label="wave lengths" type="RENDERER" context="CURRENT" component="waveLengths"  
+							script="atmosConfigChanged" scriptFile="interface.lua"/>
+
+		</window>	
+		
+		<window label="Algorithm" >
+			<var label="cam. mode" type="RENDERER" context="CURRENT" component="cameraMode" 
+							def="min=0 max=1 step=1" />
+			<var label="exposure" type="RENDERER" context="CURRENT" component="exposure" 
+							def="min=0.1 max=10 step=0.01" />
+			<var label="steps" type="RENDERER" context="CURRENT" component="steps" 
+							def="min=2 max=128 step=1" />
+			<var label="light ray steps" type="RENDERER" context="CURRENT" 
+							component="steps light ray" 
+							def="min=2 max=128 step=1" />
+			<var label="sampling" type="RENDERER" context="CURRENT" 
+							component="sampling" 
+							def="min=0 max=1" />
+		</window>	
+
+		<window label="Sun Position" >
+			<var label="Year" type="RENDERER" context="CURRENT" component="year"  
+					script="tChanged" scriptFile="interface.lua"/>
+			<var label="Month" type="RENDERER" context="CURRENT" component="month" 
+					def="min=1 max=12 step=1" script="tChanged" scriptFile="interface.lua"/>
+			<var label="Day" type="RENDERER" context="CURRENT" component="day" 
+					def="min=1 max=31 step=1" script="tChanged" scriptFile="interface.lua"/>
+			<var label="Decimal Time" type="RENDERER" context="CURRENT" component="decimalHour" 
+					def="step=0.01" script="tChanged" scriptFile="interface.lua"/>
+			<var label="Latitude" type="RENDERER" context="CURRENT" component="latitude" 
+					script="tChanged" scriptFile="interface.lua"/>
+			<var label="Longitude" type="RENDERER" context="CURRENT" component="longitude" 
+					script="tChanged" scriptFile="interface.lua"/>
+			<var label="Meridian" type="RENDERER" context="CURRENT" component="meridian" 
+					script="tChanged" scriptFile="interface.lua"/>
+			<var label="sun angles" type="RENDERER" context="CURRENT" component="sunAngles" 
+					def="readonly=true"/>
+		</window>	
+	</interface>
+</project>
