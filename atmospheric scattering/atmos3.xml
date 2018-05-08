@@ -39,7 +39,7 @@
 		<scenes>
 			<scene name="plane" >
 				<SCALE x=100 y=100 z=100 />
-				<file name="../../models/plane.obj"/>
+				<file name="./models/plane.obj"/>
 			</scene>
 			<scene name="cube" >
 				
