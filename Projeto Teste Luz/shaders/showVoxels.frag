@@ -53,6 +53,12 @@ struct AABB {
     vec3 Max;
 };
 
+float HeightSignal(vec3 pos, float h_start, float h_cloud);
+float getShape(vec3 pos);
+float getErosion(vec3 pos);
+float getDensity(vec3 pos);
+float Transmittance(float density, float l);
+
 bool IntersectBox(Ray r, out float t0, out float t1)
 {
     vec3 invR = 1.0 / r.Dir;
@@ -207,8 +213,9 @@ from other clouds
    - Ultra-Mega fps killer */
 vec4 computDirectLight(vec3 step_pos){
     // Create an Ray from the step position to the light source 
-    vec3 dir_to_sun = vec3(lPosition) - step_pos; 
-    Ray ray_to_sun = Ray( step_pos, normalize(dir_to_sun) );
+    //vec3 dir_to_sun = vec3(lPosition) - step_pos; 
+    vec3 ldir_n = normalize(vec3(m_view * lDir));
+    Ray ray_to_sun = Ray( step_pos, normalize(ldir_n) );
 
     // Same code to adjust the iterations to the box size 
     float tnear, tfar;
@@ -222,10 +229,6 @@ vec4 computDirectLight(vec3 step_pos){
     rayStart = 1/len * (rayStart -aabbMin);
     rayStop = 1/len * (rayStop -aabbMin);
 
-    double larg = aabbMax.x - aabbMin.x;
-    double cump = aabbMax.z - aabbMin.z;
-    double alt  = aabbMax.y - aabbMin.y;
-
     int steps = int(0.5 + distance(rayStop, rayStart)  * float(GridSize) * 2);
     vec3 step = (rayStop-rayStart) / float(steps);
     vec3 pos = rayStart + 0.5 * step;
@@ -233,12 +236,17 @@ vec4 computDirectLight(vec3 step_pos){
 
     // compute the possible oclusion of other clouds to the direct sun light 
     vec4 color = vec4(0,0,0,1);
-    //vec4 color = vec4(lDiffuse.rgb, 1);
     vec4 l_sun = vec4(lDiffuse.rgb, 1); 
 
-    for (travel = 0; travel != 6; travel++) {
+    for (travel = 0; travel != 25; travel++) {
         float density = getDensity(pos);
-        //color += 2 * l_sun *  float(density);
+
+        if(density > 0 ){
+            /*---   Transmittance    ---*/
+            float l = length(rayStart - pos); // distance the light will travel through the volume
+            float transmittance = Transmittance(density, l); 
+            color +=  l_sun * transmittance;
+        }
 
         /*Marching towards the sun has a great impact on performance since for 
         every step an extra number of steps has to be taken. 
@@ -248,7 +256,7 @@ vec4 computDirectLight(vec3 step_pos){
     }
 
 
-    return vec4(color.rgba); 
+    return (color); 
 }
 //------------------------------------------------------------------------
 
@@ -300,13 +308,13 @@ vec4 Scattering(float g, vec3 step_pos, vec3 step_dir){
     float phase =  10*phase_functionHG(g, dir_to_sun, step_dir);
    
     // or Cornette-Shank aproach
-    //float phase =  phase_functionCS(g, dir_to_sun, step_dir);
+    // float phase =  phase_functionCS(g, dir_to_sun, step_dir);
 
     //vec4 sun_light = computDirectLight(step_pos);
-    //vec4 ambiente_light = vec4(0.4,0.4,0.4,1);
+    vec4 ambiente_light = vec4(0.01,0.01,0.01,0);
     vec4 sun_light = vec4(1); 
 
-    return (sun_light * phase);
+    return (sun_light * phase) + ambiente_light;
 
 }
 //------------------------------------------------------------------------
@@ -320,7 +328,10 @@ vec4 Scattering(float g, vec3 step_pos, vec3 step_dir){
     sigma_Ext - sigma extintion  [0,inf]
     l - distance between the atual position and star of the box 
         ~ distance travel by the light in the box, going to the camera */
-float Transmittance(float sigmaAbs, float sigmaExt, float l){
+float Transmittance(float density, float l){
+    float sigmaAbs = sigmaAbsorption * density; // sigma absorption
+    float sigmaExt = sigmaExtintion  * density; // sigma Extintion 
+   
     return exp(-(sigmaAbs + sigmaExt) * l);
 }
 
@@ -329,21 +340,18 @@ vec4 ComputLight(vec3 RayOrigin, vec3 rayDirection, vec3 atual_pos, float densit
     float Tr = 1; 
 
     /*---   Transmittance    ---*/
-    float sigmaAbs = sigmaAbsorption * density; // sigma absorption
-    float sigmaExt = sigmaExtintion  * density; // sigma Extintion 
     float l = length(RayOrigin - atual_pos); // distance the light will travel through the volume
-    float transmittance = Transmittance(sigmaAbs, sigmaExt, l); 
+    float transmittance = Transmittance(density, l); 
     
     /*---   Scattering    ---*/
     float sigmaScatt = sigmaScattering * density; // sigma scattering   
     vec4 scatter_light = Scattering(sigmaScatt, atual_pos, rayDirection);
 
-    /*---   Light Influence    ---*/
-    vec3 ldir_n = normalize(vec3(m_view * lDir));
-    float intensity =  max(0.0, dot(ldir_n, normalize(rayDirection))); 
-
+    /*---   Light Influence  (ciclo até ao sol)  ---*/
+    vec4 intensity =  computDirectLight(atual_pos);
+    
     /*---   Combine everything   ---*/
-    return transmittance * scatter_light; 
+    return transmittance * scatter_light + (intensity); 
 
 }
 
@@ -384,11 +392,26 @@ void main() {
         
         float density = getDensity(pos);
         
-        if(density>0){
-            color += 0.02 * clamp( ComputLight(RayOrigin, rayDirection, pos, density), 0.0, 1.0);
+        if(density > 0){
+            vec4 c_aux = ComputLight(RayOrigin, rayDirection, pos, density);
+            
+            //color += ComputLight(RayOrigin, rayDirection, pos, density);
+            color += 0.02 * clamp(ComputLight(RayOrigin, rayDirection, pos, density), 0.0, 1.0);
         }
 
         pos += step;
     }
+
+    // tonemapping operator
+    // Reinhard: pow( clamp(atmos / (atmos+1.0),0.0,1.0), vec3(1.0/2.2) );
+    //color = pow( clamp(color/(color + 1.0), 0.0, 1.0), vec4(5.0/2.2) );
+    
+    // Logarithmic: pow( clamp(smoothstep(0.0, 12.0, log2(1.0+atmos)),0.0,1.0), vec3(1.0/2.2) ); */
+    //color = pow( smoothstep(0.0, 15.0, (log2(1.0+color)), vec4(1.0/2.2) );
+
+    // tone mapping
+	//vec4 white_point = vec4(1.0);
+	//color = pow(vec4(1.0) - exp(-color / white_point * 0.05), vec4(1.0 / 2.2));
+
     FragColor = color;
 }
