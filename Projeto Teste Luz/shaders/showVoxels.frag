@@ -245,6 +245,7 @@ vec4 computDirectLight(vec3 step_pos){
             /*---   Transmittance    ---*/
             float l = length(rayStart - pos); // distance the light will travel through the volume
             float transmittance = Transmittance(density, l); 
+            
             color +=  l_sun * transmittance;
         }
 
@@ -254,7 +255,6 @@ vec4 computDirectLight(vec3 step_pos){
         exponentially increasing steps size (pág 29 tese)*/
         pos += pow(4, travel) * step;
     }
-
 
     return (color); 
 }
@@ -393,10 +393,8 @@ void main() {
         float density = getDensity(pos);
         
         if(density > 0){
-            vec4 c_aux = ComputLight(RayOrigin, rayDirection, pos, density);
-            
-            //color += ComputLight(RayOrigin, rayDirection, pos, density);
-            color += 0.02 * clamp(ComputLight(RayOrigin, rayDirection, pos, density), 0.0, 1.0);
+            color += ComputLight(rayStart, rayDirection, pos, density);
+            //color += 0.02 * clamp(ComputLight(rayStart, rayDirection, pos, density), 0.0, 1.0);
         }
 
         pos += step;
@@ -404,14 +402,14 @@ void main() {
 
     // tonemapping operator
     // Reinhard: pow( clamp(atmos / (atmos+1.0),0.0,1.0), vec3(1.0/2.2) );
-    //color = pow( clamp(color/(color + 1.0), 0.0, 1.0), vec4(5.0/2.2) );
+    //color = pow( clamp(color/(color + 1.0), 0.0, 1.0), vec4(15.0/2.2) );
     
     // Logarithmic: pow( clamp(smoothstep(0.0, 12.0, log2(1.0+atmos)),0.0,1.0), vec3(1.0/2.2) ); */
-    //color = pow( smoothstep(0.0, 15.0, (log2(1.0+color)), vec4(1.0/2.2) );
+    //color = pow( clamp(smoothstep(0.0, 12.0, log2(1.0+color)),0.0,1.0), vec4(1.0/2.2) );
 
     // tone mapping
-	//vec4 white_point = vec4(1.0);
-	//color = pow(vec4(1.0) - exp(-color / white_point * 0.05), vec4(1.0 / 2.2));
+	vec4 white_point = vec4(1.0);
+	color = pow(vec4(1.0) - exp(-color / white_point * 0.02), vec4(1.0 / 2.2));
 
     FragColor = color;
 }
