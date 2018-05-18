@@ -19,6 +19,8 @@ uniform int shapeHeight;
 uniform sampler2D erosionNoise;
 uniform int erosionWidth;
 uniform int erosionHeight;
+uniform float threshold_erosion;
+uniform float erosion_amount;
 
 uniform sampler2D weatherTexture;
 uniform int weatherWidth;
@@ -40,7 +42,6 @@ uniform float g_phase_function;
 uniform float sigmaExtintion;
 uniform float sigmaAbsorption;
 uniform float sigmaScattering;
-
 
 struct Ray {
     vec3 Origin;
@@ -175,15 +176,16 @@ float getDensity(vec3 pos){
     density *= getShape(pos);
 
     //--- Fase da Erosion ---
-    density -= getErosion(pos);
-
+ 
+    if(density < threshold_erosion)
+        density -= erosion_amount *  getErosion(pos);
+    
     // Only use positive densitys after erosion !
-    if(density > 0){
+    if(density > 0)
         density *= HeightGradient(pos, weather.b, weather.g);
-
-        // clamp density to 1 for more balance lightning
-        density = min(density, 1.0);
-    }
+    
+    // clamp density to 1 for more balance lightning
+    density = clamp(density, 0.0, 1.0);
 
     return density;
 }
@@ -404,12 +406,13 @@ void main() {
         if(density > 0){
             vec3 S; 
             float Tr; 
+            // Como fazer conservative light scattering ? 
             //ComputLight(rayStart, rayDirection, pos, density, S, Tr);
             //scattering +=  S - S* transmittance / (sigmaExtintion * density + 0.00001);
             //transmittance *= Tr; 
             //color.rgb += scattering;
             //color.a *= transmittance;
-            
+           
             color += ComputLight(rayStart, rayDirection, pos, density, S, Tr);
             //color += 0.02 * clamp(ComputLight(rayStart, rayDirection, pos, density), 0.0, 1.0);
          

@@ -109,7 +109,11 @@
 					<valueof uniform="sigmaAbsorption" 	type="COLOR" context="CURRENT"
 															component="sigmaAbsorption" />
 					<valueof uniform="sigmaScattering" 	type="COLOR" context="CURRENT"
-															component="sigmaScattering" />
+															component="sigmaScattering" />									
+					<valueof uniform="threshold_erosion" 	type="COLOR" context="CURRENT"
+															component="threshold_erosion" />
+					<valueof uniform="erosion_amount" 	type="COLOR" context="CURRENT"
+															component="erosion_amount" />
 															
 					<valueof uniform="lDir" type="LIGHT" context="Sun"
 														component="DIRECTION" />
