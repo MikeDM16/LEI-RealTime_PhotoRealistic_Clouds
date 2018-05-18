@@ -14,10 +14,10 @@
 			<!-- terrain parameters -->
 			<attribute type="COLOR" name="scale" data="FLOAT" value=15/>
 			<attribute type="COLOR" name="layer_Height" data="FLOAT" value=3.0/>
-			<attribute type="COLOR" name="sigmaScattering" data="FLOAT" value=0.70/>
-			<attribute type="COLOR" name="sigmaExtintion" data="FLOAT" value=0.2/>
-			<attribute type="COLOR" name="sigmaAbsorption" data="FLOAT" value=0.2/>
-			<attribute type="COLOR" name="g_phase_function" data="FLOAT" value=0.2/>
+			<attribute type="COLOR" name="sigmaScattering" data="FLOAT" value=0.15/>
+			<attribute type="COLOR" name="sigmaExtintion" data="FLOAT" value=0.15/>
+			<attribute type="COLOR" name="sigmaAbsorption" data="FLOAT" value=0.15/>
+			<attribute type="COLOR" name="g_phase_function" data="FLOAT" value=0.7/>
 
 		</attributes>
 		<scenes>

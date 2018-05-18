@@ -110,7 +110,7 @@
 															component="sigmaAbsorption" />
 					<valueof uniform="sigmaScattering" 	type="COLOR" context="CURRENT"
 															component="sigmaScattering" />
-					
+															
 					<valueof uniform="lDir" type="LIGHT" context="Sun"
 														component="DIRECTION" />
 
