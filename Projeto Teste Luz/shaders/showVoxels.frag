@@ -39,7 +39,6 @@ uniform vec3 aabbMin, aabbMax;
 // Parameters from inteface
 uniform float layer_Height;
 uniform float g_phase_function;
-uniform float sigmaExtintion;
 uniform float sigmaAbsorption;
 uniform float sigmaScattering;
 
@@ -100,12 +99,12 @@ float getShape(vec3 pos){
     vec2 textCoord = aux.xz;
 
     float densidadeR = texelFetch(shapeNoise, ivec2(textCoord), level).r;
-    return densidadeR;
+    //return densidadeR;
     
-    //float densidadeG = texelFetch(shapeNoise, ivec2(textCoord), level).g;
-    //float densidadeB = texelFetch(shapeNoise, ivec2(textCoord), level).b;
-    //float densidadeA = texelFetch(shapeNoise, ivec2(textCoord), level).a;
-    //return 0.625*densidadeG * 0.25*densidadeB * 0.125*densidadeA; ;
+    float densidadeG = texelFetch(shapeNoise, ivec2(textCoord), level).g;
+    float densidadeB = texelFetch(shapeNoise, ivec2(textCoord), level).b;
+    float densidadeA = texelFetch(shapeNoise, ivec2(textCoord), level).a;
+    return densidadeR * 0.625*densidadeG * 0.25*densidadeB * 0.125*densidadeA; ;
 }
 //------------------------------------------------------------------------
 
@@ -152,7 +151,7 @@ float HeightGradient(vec3 pos, float h_start, float h_cloud) {
             //atenuacao = texelFetch(shapeNoise, ivec2(textCoord), level).a;
         }else
             atenuacao = density_gradient_cumulonimbus(pos.y);
-    return atenuacao * pos.y*layer_Height; 
+    return atenuacao * pos.y;//*layer_Height; 
     return atenuacao;
 }
 //------------------------------------------------------------------------
@@ -321,14 +320,15 @@ vec4 Scattering(float g, vec3 step_pos, vec3 step_dir){
         ~ distance travel by the light in the box, going to the camera */
 float Transmittance(float density, float l, vec3 step_dir){
     float sigmaAbs = sigmaAbsorption * density; // sigma absorption
-    float sigmaExt = sigmaExtintion  * density; // sigma Extintion 
     float sigmaScatt = sigmaScattering * density; // sigma Scattering 
+    
+    float sigmaExt = (sigmaAbs + sigmaScatt)  * density; // sigma Extintion 
     
     // Beers Law  E = exp(-l)
     //return exp(- l * density);
 
     // Powder Law E = 1 - exp(-l*2)
-    // return  (1 - exp(- l * 2 ));
+    //return  (1 - exp(- l * 2 ));
 
     // Beer's Powder 
     //return exp(-(sigmaAbs + sigmaExt) * l);
@@ -408,6 +408,7 @@ void main() {
             float Tr; 
             // Como fazer conservative light scattering ? 
             //ComputLight(rayStart, rayDirection, pos, density, S, Tr);
+            // sigmaExt = sigmaAbs + sigmaScatt
             //scattering +=  S - S* transmittance / (sigmaExtintion * density + 0.00001);
             //transmittance *= Tr; 
             //color.rgb += scattering;

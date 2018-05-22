@@ -104,8 +104,7 @@
 															component="layer_Height" />
 					<valueof uniform="g_phase_function" 	type="COLOR" context="CURRENT"
 															component="g_phase_function" />
-					<valueof uniform="sigmaExtintion" 	type="COLOR" context="CURRENT"
-															component="sigmaExtintion" />
+	
 					<valueof uniform="sigmaAbsorption" 	type="COLOR" context="CURRENT"
 															component="sigmaAbsorption" />
 					<valueof uniform="sigmaScattering" 	type="COLOR" context="CURRENT"
