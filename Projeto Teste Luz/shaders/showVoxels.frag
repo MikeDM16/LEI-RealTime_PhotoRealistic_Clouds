@@ -104,7 +104,7 @@ float getShape(vec3 pos){
     float densidadeG = texelFetch(shapeNoise, ivec2(textCoord), level).g;
     float densidadeB = texelFetch(shapeNoise, ivec2(textCoord), level).b;
     float densidadeA = texelFetch(shapeNoise, ivec2(textCoord), level).a;
-    return densidadeR * 0.625*densidadeG * 0.25*densidadeB * 0.125*densidadeA; ;
+    return densidadeR * densidadeG *densidadeB * densidadeA ;
 }
 //------------------------------------------------------------------------
 
@@ -259,7 +259,7 @@ float phase_functionHG(float g , vec3 light, vec3 step_dir) {
 	float n = 1 - pow(g , 2); 
 	
     // 1 + g^2 - 2g*cos(x)
-    float cos_teta = dot(light,step_dir); // cos(x)
+    float cos_teta = dot(step_dir, light); // cos(x)
 	float d = 1 + pow(g ,2) - 2 * g * cos_teta; 
     
     return  float(n  / (4*pi * pow(d, 1.5)));
@@ -277,7 +277,7 @@ float phase_functionCS(float g, vec3 light, vec3 step_dir) {
 	float n = (3/2) * (1 - pow(g, 2))/(2+pow(g, 2)); 
 	
     // (1 + cos^2(teta)) / (1 + g^2 -2g*cos(teta^[3/2]))
-    float cos_teta = dot(light,step_dir); // cos(x)
+    float cos_teta = dot(step_dir, light); // cos(x)
 	float d = 1 + pow(g, 2) - 2*g*cos_teta; 
     return n * (1 + pow(cos_teta, 2)) / pow(d, 1.5);
 }
@@ -288,15 +288,18 @@ float phase_functionCS(float g, vec3 light, vec3 step_dir) {
         - Forward scattering: 0 < g ≤ 1
 */
 vec4 Scattering(float g, vec3 step_pos, vec3 step_dir){
-    vec3 dir_to_sun = normalize(vec3(m_view * lDir));
- 
+    vec3 dir_to_sun = normalize(vec3(-lDir));
+
+    float density = g / g_phase_function; 
     // Henyey-Greenstein function:
-    float phase_G0 =  10*phase_functionHG(g, dir_to_sun, step_dir);
+    float phase_G0 = 10*phase_functionHG(0.8 * density, dir_to_sun, step_dir);
    
     // Cornette-Shank aproach
-    float phase_G1 =  phase_functionCS(g, dir_to_sun, step_dir);
+    float phase_G1 = phase_functionHG(-0.8 * density, dir_to_sun, step_dir);
+    //float phase_G1 =  phase_functionCS(0.5, dir_to_sun, step_dir);
 
-    float phase = mix(phase_G0, phase_G1, 0.5);
+    float phase = mix(phase_G0, phase_G1, -g_phase_function);
+ 
     
     //vec4 ambiente_light =  skyColor(step_dir, dir_to_sun, step_pos, g);
     vec4 ambiente_light = vec4(0.1,0.1,0.1,0);
@@ -334,7 +337,7 @@ float Transmittance(float density, float l, vec3 step_dir){
     //return exp(-(sigmaAbs + sigmaExt) * l);
 
     // proposta de Juraj Palenik master thesis 
-    vec3 dir_to_sun = normalize(vec3(m_view * lDir));
+    vec3 dir_to_sun = normalize(vec3(lDir));
     float cos_teta = dot(dir_to_sun, step_dir); // cos(x)
     float BP_exp1 = exp(-(sigmaScatt)*l);
     float BP_exp2 = ((cos_teta + 1)/2) * exp(-(sigmaAbs + sigmaExt) * l); 
@@ -423,13 +426,13 @@ void main() {
 
     // tonemapping operator
     // Reinhard: pow( clamp(atmos / (atmos+1.0),0.0,1.0), vec3(1.0/2.2) );
-    //color = pow( clamp(color/(color + 1.0), 0.0, 1.0), vec4(15.0/2.2) );
+    //color = pow( clamp(color/(color + 1.0), 0.0, 1.0), vec4(22.0/2.2) );
     
     // Logarithmic: pow( clamp(smoothstep(0.0, 12.0, log2(1.0+atmos)),0.0,1.0), vec3(1.0/2.2) ); */
     //color = pow( clamp(smoothstep(0.0, 12.0, log2(1.0+color)),0.0,1.0), vec4(1.0/2.2) );
 
     // tone mapping
-	vec4 white_point = vec4(100);
+	vec4 white_point = vec4(50);
 	color = pow(vec4(1.0) - exp(-color / white_point), vec4(1.0 / 2.2));
     color = clamp(color, 0.0, 1.0);
 
