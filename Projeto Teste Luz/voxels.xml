@@ -16,13 +16,14 @@
 			<attribute type="COLOR" name="layer_Height" data="FLOAT" value=3.0/>
 			
 			<attribute type="COLOR" name="threshold_erosion" data="FLOAT" value=0.3/>
-			<attribute type="COLOR" name="erosion_amount" data="FLOAT" value=1/>
+			<attribute type="COLOR" name="erosion_amount" data="FLOAT" value=100/>
 
 			<attribute type="COLOR" name="sigmaScattering" data="FLOAT" value=0.15/>
 			<attribute type="COLOR" name="sigmaExtintion" data="FLOAT" value=0.15/>
 			<attribute type="COLOR" name="sigmaAbsorption" data="FLOAT" value=0.15/>
 			<attribute type="COLOR" name="g_phase_function" data="FLOAT" value=0.7/>
 
+			<attribute type="COLOR" name="volume_steps" data="INT" value=128/>
 		</attributes>
 		<scenes>
 			<!--scene name="MainScene" param="UNITIZE">
@@ -145,6 +146,9 @@
 					component="sigmaAbsorption" def="min=0.0 max=20 step=0.01" />
 			<var label="Sigma Scattering" type="COLOR" context="Voxels::showVoxels"
 					component="sigmaScattering" def="min=0.0 max=20 step=0.001" />
+			
+			<var label="RayMarch steps" type="COLOR" context="Voxels::showVoxels"
+					component="volume_steps" def="min=0 max=512 step=32" />
 		</window>
 	</interface>
 </project>

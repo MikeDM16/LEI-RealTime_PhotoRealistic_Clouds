@@ -113,6 +113,9 @@
 															component="threshold_erosion" />
 					<valueof uniform="erosion_amount" 	type="COLOR" context="CURRENT"
 															component="erosion_amount" />
+					
+					<valueof uniform="volume_steps" 	type="COLOR" context="CURRENT"
+															component="volume_steps" />
 															
 					<valueof uniform="lDir" type="LIGHT" context="Sun"
 														component="DIRECTION" />

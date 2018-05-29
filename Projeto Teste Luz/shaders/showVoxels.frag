@@ -26,7 +26,8 @@ uniform sampler2D weatherTexture;
 uniform int weatherWidth;
 uniform int weatherHeight;
 
-uniform int GridSize;
+uniform int GridSize = 500;
+uniform int volume_steps;
 
 uniform mat4 VM;
 uniform float FOV;
@@ -98,13 +99,16 @@ float getShape(vec3 pos){
     aux.x = floor(aux.y)*(shapeHeight/4) + aux.x;
     vec2 textCoord = aux.xz;
 
-    float densidadeR = texelFetch(shapeNoise, ivec2(textCoord), level).r;
-    //return densidadeR;
-    
-    float densidadeG = texelFetch(shapeNoise, ivec2(textCoord), level).g;
-    float densidadeB = texelFetch(shapeNoise, ivec2(textCoord), level).b;
-    float densidadeA = texelFetch(shapeNoise, ivec2(textCoord), level).a;
-    return densidadeR * densidadeG *densidadeB * densidadeA ;
+    vec4 densidades = texelFetch(shapeNoise, ivec2(textCoord), level).rgba;
+
+    float densidadeR = densidades.r;
+    float densidadeG = densidades.g;
+    float densidadeB = densidades.b;
+    float densidadeA = densidades.a;
+
+    return 0.625+densidadeR + 0.5*densidadeG + 0.125*densidadeB; 
+    //return 0.625*densidadeR * 0.5*densidadeG * 0.125*densidadeB; 
+    //return densidadeR* densidadeG *densidadeB * densidadeA ;
 }
 //------------------------------------------------------------------------
 
@@ -116,12 +120,27 @@ float getErosion(vec3 pos){
     aux.x = floor(aux.y)*erosionHeight + aux.x;
     vec2 textCoord = aux.xz;
     
-    float densidadeR =  texture(erosionNoise, vec2(textCoord.x/erosionWidth, pos.z), level).r;
-    //return densidadeR;
-    float densidadeG =  texture(erosionNoise, vec2(textCoord.x/erosionWidth, pos.z), level).g;
-    float densidadeB =  texture(erosionNoise, vec2(textCoord.x/erosionWidth, pos.z), level).b;
+    vec3 densidades = texture(erosionNoise, vec2(textCoord.x/erosionWidth, pos.z), level).rgb; 
+    float densidadeR =  densidades.r;
+    float densidadeG =  densidades.g;
+    float densidadeB =  densidades.b;
     
-    return  0.625*densidadeR * 0.25*densidadeG * 0.125*densidadeB; 
+    return 0.625*densidadeR * 0.5*densidadeG * 0.125*densidadeB; 
+
+    aux = vec3(pos);
+    aux.xyz *= shapeHeight;
+    aux.x = floor(aux.y)*(shapeHeight/4) + aux.x;
+    textCoord = aux.xz;
+
+    vec4 densities = texelFetch(shapeNoise, ivec2(textCoord), level).rgba;
+    float densidadeR1 = densities.r;
+    float densidadeG1 = densities.g;
+    float densidadeB1 = densities.b;
+    float densidadeA = densities.a;
+
+    return  (0.625*densidadeR*densidadeR1 *
+            0.5*densidadeG*densidadeG1 * 
+            0.25*densidadeB*densidadeB1)*0.125*densidadeA; 
 }
 //------------------------------------------------------------------------
 
@@ -151,7 +170,7 @@ float HeightGradient(vec3 pos, float h_start, float h_cloud) {
             //atenuacao = texelFetch(shapeNoise, ivec2(textCoord), level).a;
         }else
             atenuacao = density_gradient_cumulonimbus(pos.y);
-    return atenuacao * pos.y;//*layer_Height; 
+    return atenuacao* pos.y;//*layer_Height; 
     return atenuacao;
 }
 //------------------------------------------------------------------------
@@ -214,8 +233,7 @@ vec4 computDirectLight(vec3 step_pos){
     rayStart = 1/len * (rayStart -aabbMin);
     rayStop = 1/len * (rayStop -aabbMin);
 
-    //int steps = int(0.5 + distance(rayStop, rayStart)  * float(GridSize) * 2);
-    int steps = 25;
+    int steps = int(0.5 + distance(rayStop, rayStart)  * float(25));
     vec3 step = (rayStop-rayStart) / float(steps);
     vec3 pos = rayStart + 0.5 * step;
     int travel = steps;
@@ -295,10 +313,10 @@ vec4 Scattering(float g, vec3 step_pos, vec3 step_dir){
     float phase_G0 = 10*phase_functionHG(0.8 * density, dir_to_sun, step_dir);
    
     // Cornette-Shank aproach
-    float phase_G1 = phase_functionHG(-0.8 * density, dir_to_sun, step_dir);
+    float phase_G1 = phase_functionHG(-0.5 * density, dir_to_sun, step_dir);
     //float phase_G1 =  phase_functionCS(0.5, dir_to_sun, step_dir);
 
-    float phase = mix(phase_G0, phase_G1, -g_phase_function);
+    float phase = mix(phase_G1, phase_G0, g_phase_function);
  
     
     //vec4 ambiente_light =  skyColor(step_dir, dir_to_sun, step_pos, g);
@@ -391,7 +409,7 @@ void main() {
     double cump = aabbMax.z - aabbMin.z;
     double alt  = aabbMax.y - aabbMin.y;
 
-    int steps = int(0.5 + distance(rayStop, rayStart)  * float(GridSize) * 2);
+    int steps = int(0.5 + distance(rayStop, rayStart) * float(volume_steps));
     vec3 step = (rayStop-rayStart) / float(steps);
     vec3 pos = rayStart + 0.5 * step;
     int travel = steps;
@@ -432,7 +450,10 @@ void main() {
     //color = pow( clamp(smoothstep(0.0, 12.0, log2(1.0+color)),0.0,1.0), vec4(1.0/2.2) );
 
     // tone mapping
-	vec4 white_point = vec4(50);
+    int base_point = 50;
+    float max_iterations = 512.0;
+    vec4 white_point = vec4(base_point * (volume_steps / max_iterations));
+	
 	color = pow(vec4(1.0) - exp(-color / white_point), vec4(1.0 / 2.2));
     color = clamp(color, 0.0, 1.0);
 
