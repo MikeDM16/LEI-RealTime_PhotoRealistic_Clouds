@@ -10,12 +10,15 @@
  
 ## Equipa
  - Catarina
- - Luce
- - Migas
+ - Luciano
+ - Miguel
 
- > **cenas aleatórias:**
  > Computação Gráfica
+ 
  > Laboratório em Engenharia Informática
+ 
  > Mestrado Integrado em Engenharia Informática
+ 
  > Departamento de Informática
+ 
  > Universidade do Minho
