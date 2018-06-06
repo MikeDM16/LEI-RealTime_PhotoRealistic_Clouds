@@ -1,0 +1,245 @@
+<?xml version="1.0" ?>
+<project name="Atmospheric Scattering - RGB" width=800 height = 600>
+	<assets>
+		<constants>
+			<constant name="GridSize" value = "128" />
+		</constants>
+
+		<attributes>
+			<!--sky parameters-->
+			<attribute type="RENDERER" name="year" data="INT" value=2017 />
+			<attribute type="RENDERER" name="month" data="INT" value=11  />
+			<attribute type="RENDERER" name="day" data="INT" value=21  />
+			<attribute type="RENDERER" name="decimalHour" data="FLOAT" value=9 />
+			<attribute type="RENDERER" name="ordinalDay" data="INT" value=1 />
+			
+			<attribute type="RENDERER" name="meridian" data="INT" value=0 />
+			<attribute type="RENDERER" name="latitude" data="FLOAT" value= 41.545449/>
+			<attribute type="RENDERER" name="longitude" data="FLOAT" value=-8.426507/>
+			<attribute type="RENDERER" name="sunAngles" data="VEC2" x=0 y=10 />
+			
+			
+			<attribute type="RENDERER" name="hr" data="FLOAT" value=7994 />
+			<attribute type="RENDERER" name="hm" data="FLOAT" value=1200 />
+			<attribute type="RENDERER" name="g" data="FLOAT" value=0.76 />
+			<attribute type="RENDERER" name="betaR" data="VEC3" 
+							x=3.67044e-07 y=1.11688e-06 z=1.80601e-06 />
+			<attribute type="RENDERER" name="waveLengths" data="VEC3" x="700" y="530" z="470" />
+			<attribute type="RENDERER" name="pressure" data="FLOAT" value = "101325" />
+			<attribute type="RENDERER" name="temperature" data="FLOAT" value="0" />
+			<attribute type="RENDERER" name="indexOfRefraction" data = "FLOAT" value = "1.0003" />
+			<attribute type="RENDERER" name="betaM" data="FLOAT" value=5.76e-7 />
+			
+			<attribute type="RENDERER" name="cameraMode" data="INT" value = 0 />
+			<attribute type="RENDERER" name="exposure" data="FLOAT" value = 1.5 />
+			<attribute type="RENDERER" name="steps light ray" data="INT" value = 32 />
+			<attribute type="RENDERER" name="steps" data="INT" value = 32 />
+			<attribute type="RENDERER" name="sampling" data="INT" value = 0 />
+			
+			<attribute type="RENDERER" name="debug" data="VEC3" x=0 y=0 z=0 />
+
+			<!-- clouds parameters-->
+			<attribute name="GridSize" type="PASS" data="INT" value="GridSize" />
+			<attribute name="GridLevels" type="PASS" data="INT" value=7 />
+			<attribute name="GridCurrentLevel" type="PASS" data="INT" value=0 />
+			<attribute name="aabbMin" type="PASS" data="VEC3" x=-5 y= 3 z=-5/>
+			<attribute name="aabbMax" type="PASS" data="VEC3" x=5 y= 6 z=5/>
+			
+			<attribute type="COLOR" name="threshold_erosion" data="FLOAT" value=0.15/>
+			<attribute type="COLOR" name="erosion_amount" data="FLOAT" value=50/>
+
+			<attribute type="COLOR" name="sigmaScattering" data="FLOAT" value=0.04/>
+			<attribute type="COLOR" name="sigmaAbsorption" data="FLOAT" value=0.03/>
+			<attribute type="COLOR" name="g0_phase_function" data="FLOAT" value=0.8/>
+			<attribute type="COLOR" name="g1_phase_function" data="FLOAT" value=-0.5/>
+			<attribute type="COLOR" name="phase_mix" data="FLOAT" value=0.5/>
+
+			<attribute type="COLOR" name="volume_steps" data="INT" value=128/>
+			<attribute type="COLOR" name="gamma" data="FLOAT" value=2.2/>
+
+			<!-- terrain parameters -->
+			<attribute type="COLOR" name="scale" data="FLOAT" value=15/>
+			<attribute type="COLOR" name="layer_Height" data="FLOAT" value=3.0/>
+		</attributes>
+		
+		<scenes>
+			<!--sky scenes-->
+			<scene name="plane" >
+				<SCALE x=100 y=100 z=100 />
+				<file name="./models/plane.obj"/>
+			</scene>
+			<scene name="cube" >
+				<geometry name = "Box" type = "BOX"  material="box" >
+					<TRANSLATE x=0 y=0 z=20 />
+				</geometry>
+			</scene>
+			<!--cloud scenes-->
+			<scene name="Dummy" >
+				<buffers name="positions" primitive="POINTS" material="showRays">
+					<position name="dummy" fromLibrary="atmos" />
+				</buffers>
+			</scene>
+			<!--terrain scenes-->
+			<!--
+			<scene name="terrain" type="Scene">
+				<geometry name = "terra" type = "GRID" material="terrain"
+							DIVISIONS=20 LENGTH=100 >
+							<SCALE x=0.10 y=0.20 z=0.10/>
+							<TRANSLATE x =0 y = -3 z = 0 />
+				</geometry>
+			</scene>
+			-->
+		</scenes>
+		
+		<viewports>
+			<viewport name="MainViewport">
+				<CLEAR_COLOR r="0.2" g="0.5" b="1.0" />
+			</viewport>
+		</viewports>
+		
+		<cameras>
+			<camera name="MainCamera" >
+				<viewport name="MainViewport" />
+				<projection TYPE="PERSPECTIVE" FOV=60 NEAR=0.01 FAR=2000.0 />
+				<POSITION x=-7 y=0 z= 10  />
+				<VIEW x=0.50 y=0.25 z=-0.80 />
+				<UP x=0 y=1 z=0 />
+			</camera>
+		</cameras>
+		
+		<lights>
+			<light name="Sun" >
+				<DIRECTION x=0 y=-1 z=0 />
+				<POSITION x=0 y=100 z=0 />
+				<COLOR r="1" g="1" b="1" />
+				<AMBIENT r="0.5" g="0.0" b="0.0" />
+			</light>
+		</lights>
+		
+		<materialLibs>
+			<materialLib filename="atmos3.mlib" />
+		</materialLibs>
+	</assets>
+	
+	<pipelines>
+		<pipeline name="atmos" default="true">
+			<preScript script="tChanged" file="interface.lua" />
+			
+			<pass class="quad" name="sky">
+				<viewport name="MainViewport" />
+				<material name="sky" fromLibrary="atmos" />
+			</pass>
+			
+			<pass class="default" name="ground">
+				<COLOR_CLEAR value="false" />
+				<scenes>
+					<scene name="plane" />
+					<scene name="cube" />
+				</scenes>
+				<camera name="MainCamera" />
+				<lights>
+					<light name="Sun" />
+				</lights>
+				<materialMaps>
+					<map fromMaterial="box"
+						toLibrary="atmos" toMaterial="box" />
+				</materialMaps>
+			</pass>
+		
+			<pass class="default" name="clouds">
+				<COLOR_CLEAR value="false" />
+				<scenes>
+					<scene name="Dummy" />
+				</scenes>
+				<camera name="MainCamera" />
+				<lights>
+					<light name="Sun" />
+				</lights>
+				<viewport name="MainViewport" />
+				<materialMaps>
+					<map fromMaterial="*"
+						 toLibrary="atmos" toMaterial="clouds" />
+				</materialMaps>
+			</pass>
+		</pipeline>
+	</pipelines>
+	<interface>
+		<window label="Sky Config" >
+			<var label="g" type="RENDERER" context="CURRENT" component="g" 
+							def="min=-1 max=0.9999 step=0.001" />
+			<var label="atm. pressure" type="RENDERER" context="CURRENT" component="pressure" 
+							def="step=1" script="atmosConfigChanged" scriptFile="interface.lua"/>
+			<var label="temp. (C)" type="RENDERER" context="CURRENT" component="temperature" 
+							def="step=0.1" script="atmosConfigChanged" scriptFile="interface.lua"/>
+			<var label="index of reftract." type="RENDERER" context="CURRENT" 
+							component="indexOfRefraction" 
+							def="min=1.00001 max=1.00200 step=0.00001" script="atmosConfigChanged" scriptFile="interface.lua"/>
+			<var label="wave lengths" type="RENDERER" context="CURRENT" component="waveLengths"  
+							script="atmosConfigChanged" scriptFile="interface.lua"/>
+
+		</window>	
+		
+		<window label="Algorithm" >
+			<var label="cam. mode" type="RENDERER" context="CURRENT" component="cameraMode" 
+							def="min=0 max=1 step=1" />
+			<var label="exposure" type="RENDERER" context="CURRENT" component="exposure" 
+							def="min=0.1 max=10 step=0.01" />
+			<var label="steps" type="RENDERER" context="CURRENT" component="steps" 
+							def="min=2 max=128 step=1" />
+			<var label="light ray steps" type="RENDERER" context="CURRENT" 
+							component="steps light ray" 
+							def="min=2 max=128 step=1" />
+			<var label="sampling" type="RENDERER" context="CURRENT" 
+							component="sampling" 
+							def="min=0 max=1" />
+		</window>	
+
+		<window label="Sun Position" >
+			<var label="Year" type="RENDERER" context="CURRENT" component="year"  
+					script="tChanged" scriptFile="interface.lua"/>
+			<var label="Month" type="RENDERER" context="CURRENT" component="month" 
+					def="min=1 max=12 step=1" script="tChanged" scriptFile="interface.lua"/>
+			<var label="Day" type="RENDERER" context="CURRENT" component="day" 
+					def="min=1 max=31 step=1" script="tChanged" scriptFile="interface.lua"/>
+			<var label="Decimal Time" type="RENDERER" context="CURRENT" component="decimalHour" 
+					def="step=0.01" script="tChanged" scriptFile="interface.lua"/>
+			<var label="Latitude" type="RENDERER" context="CURRENT" component="latitude" 
+					script="tChanged" scriptFile="interface.lua"/>
+			<var label="Longitude" type="RENDERER" context="CURRENT" component="longitude" 
+					script="tChanged" scriptFile="interface.lua"/>
+			<var label="Meridian" type="RENDERER" context="CURRENT" component="meridian" 
+					script="tChanged" scriptFile="interface.lua"/>
+			<var label="sun angles" type="RENDERER" context="CURRENT" component="sunAngles" 
+					def="readonly=true"/>
+		</window>	
+
+		<window label="Clouds" >
+			<pipelineList label="Parametros" />
+			<var label="Cloud layer_Height" type="COLOR" context="atmos::clouds"
+					component="layer_Height" def="min=1 max=10 step=0.5" />
+			
+			<var label="Threshold Erosion" type="COLOR" context="atmos::clouds"
+					component="threshold_erosion" def="min=0.0 max=1.0 step=0.01" />
+			<var label="Erosion amount" type="COLOR" context="atmos::clouds"
+					component="erosion_amount" def="min=0.0 max=250 step=1" />
+			
+			<var label="G0 Phase Function" type="COLOR" context="atmos::clouds"
+					component="g0_phase_function" def="min=-0.99 max=0.99 step=0.05" />
+			<var label="GI Phase Function" type="COLOR" context="atmos::clouds"
+					component="g1_phase_function" def="min=-0.99 max=0.99 step=0.05" />
+			<var label="Mix Phase Function" type="COLOR" context="atmos::clouds"
+					component="phase_mix" def="min=0.0 max=1 step=0.05" />
+			
+			<var label="Sigma Absorption" type="COLOR" context="atmos::clouds"
+					component="sigmaAbsorption" def="min=0.0 max=0.25 step=0.001" />
+			<var label="Sigma Scattering" type="COLOR" context="atmos::clouds"
+					component="sigmaScattering" def="min=0.0 max=0.25 step=0.001" />
+			
+			<var label="RayMarch steps" type="COLOR" context="atmos::clouds"
+					component="volume_steps" def="min=0 max=512 step=32" />
+			
+			<var label="Gamma" type="COLOR" context="atmos::clouds"
+					component="gamma" def="min=0.0001 max=10 step=0.1" />
+		</window>
+	</interface>
+</project>
