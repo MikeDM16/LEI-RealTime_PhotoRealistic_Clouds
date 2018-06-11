@@ -430,10 +430,13 @@ float Transmittance(float density, float l, vec3 step_dir){
     float sigmaExt   = (sigmaAbs + sigmaScatt); // sigma Extintion 
     
     // Beers Law  E = exp(-l)
+    //float beers = exp(- l * density);
     //return exp(- l * density);
 
     // Powder Law E = 1 - exp(-l*2)
+    //float powder = (1 - exp(- l * density * 2 ));
     //return  (1 - exp(- l * 2 ));
+
 
     // Beer's Powder 
     return exp(-sigmaExt * l);
@@ -445,11 +448,11 @@ float Transmittance(float density, float l, vec3 step_dir){
                             -cos(sunAnglesRad.y) * cos(sunAnglesRad.x));
 
     step_dir = normalize(step_dir);
-    float cos_teta = max(0.0, dot(dir_to_sun, step_dir)); // cos(x)
+    float cos_teta = (dot(dir_to_sun, step_dir)); // cos(x)
     
     float BP_exp1 = exp(-(sigmaAbs)*l);
     float BP_exp2 = 1 - ((cos_teta + 1)/2) * exp(-sigmaExt * l); 
-    return  BP_exp2;  
+    return BP_exp1 * BP_exp2;  
     
 }
 
@@ -465,15 +468,15 @@ void ComputLight(vec3 RayOrigin, vec3 rayDirection, vec3 atual_pos, float densit
     float phase = Scattering(density, atual_pos, rayDirection);
     
     //vec4 ambiente_light =  skyColor(step_dir, dir_to_sun, step_pos, g);
-    vec3 ambiente_light = vec3(0.5,0.5,0.0);// vec3(0.2,0.2,0.2);
+    vec3 ambiente_light = vec3(0.8,0.8,0.8);// vec3(0.2,0.2,0.2);
     
     //---   Evaluate direct loght ---
     vec3 direct_light =  computDirectLight(atual_pos);
     //vec3 direct_light = skyColor(atual_pos);
     
     //---   Combine everything   ---
-    float sigmaExt = (sigmaAbsorption + sigmaScattering) * density ;  // sigma Extintion 
-    S = (direct_light * phase + ambiente_light) * sigmaScattering ;
+    float sigmaExt = (sigmaAbsorption + sigmaScattering) * density;  // sigma Extintion 
+    S =  (direct_light * phase + ambiente_light) * sigmaScattering ;
 }
 
 void main() {
@@ -520,7 +523,7 @@ void main() {
              
             // analytic conservative light scattering 
             // technicaly u should also multiply the sigmaExt with density 
-            float sigmaExt = (sigmaAbsorption + sigmaScattering) * density;
+            float sigmaExt = (sigmaAbsorption + sigmaScattering)* density;
             float clampedExtinction = max( sigmaExt , 0.00000001) ;
 
             if(transmittance < 0.01) break; 
@@ -528,19 +531,19 @@ void main() {
             Sint = (S - S* Tr) / ( clampedExtinction );
             scatteredLight += Sint * transmittance;
             transmittance  *= Tr;
-            
-            color.rgb = scatteredLight;
-            color.a   = transmittance;  
+
+
+            color.rgb = transmittance*BG_color.rgb + scatteredLight; 
+            color.a   = 1; 
         }
         pos += step;
     }
-    color = transmittance*BG_color + color;
-
+    
     // tonemapping operator
     // Reinhard: pow( clamp(atmos / (atmos+1.0),0.0,1.0), vec3(1.0/2.2) );
     //color.a = pow( clamp(color.a/(color.a+1.0), 0.0,1.0), (1.0/0.2));
-    vec4 mapped = clamp(color / (color + 1.0), 0.0, 1.0);
-    color = pow( mapped, vec4(1.0 / gamma) );
+    //vec3 mapped = clamp(color.rgb / (color.rgb + 1.0), 0.0, 1.0);
+    //color.rgb = mapped; //pow( mapped, vec4(1.0 / gamma) );
     
     // Logarithmic: pow( clamp(smoothstep(0.0, 12.0, log2(1.0+atmos)),0.0,1.0), vec3(1.0/2.2) ); */
     //color.a = pow( clamp(smoothstep(0.0, 7.0, log2(1.0+color.a)),0.0,1.0), (1.0/2.2));
@@ -557,15 +560,15 @@ void main() {
     color.rgb = pow( mapped, vec3(1.0 / 2.2) );
      */
 
-    /*
+    
     // tone mapping
     float base_point = 50;
     float max_iterations = 512.0;
     vec3 white_point = vec3(base_point * (volume_steps / max_iterations));
     color.rgb = pow(vec3(1.0) - exp(-color.rgb / white_point), vec3(1.0 / 2.2));
-    color.a = pow((1.0) - exp(-color.a / 1), (1.0 / 2.2));
-    */
- 
+    //acolor.a = pow((1.0) - exp(-color.a / 1), (1.0 / 2.2));
+    
+
     FragColor = color;
     //FragColor.rgb = color.rgb;
     //FragColor.a =color.a;

@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<project name="Atmospheric Scattering - RGB" width=800 height = 600>
+<project name="Atmospheric Scattering - RGB" width=1200 height = 600>
 	<assets>
 		<constants>
 			<constant name="GridSize" value = "128" />
@@ -101,10 +101,13 @@
 			<camera name="MainCamera" >
 				<viewport name="MainViewport" />
 				<projection TYPE="PERSPECTIVE" FOV=60 NEAR=0.01 FAR=2000.0 />
-				<!--POSITION x=-9 y=-0.08 z= -6  />
-				<VIEW x=0.87141 y=0.309964 z=0.3801967 /-->
-				<POSITION x=-7 y=0 z= 10  />
-				<VIEW x=0.50 y=0.25 z=-0.80 />
+				<POSITION x=-7.5363 y=10.8228 z=-9.3703/>
+				<VIEW x=0.7620; y=-0.3718 z=0.5301 />
+				<!--POSITION x=0.5410 y=0.7396 z=-12.5468 />
+				<VIEW x=0.2860 y=0.2850 z=0.9148 /-->
+
+				<!--VIEW x=0.50 y=0.25 z=-0.80 />
+				<POSITION x=-9 y=-0.08 z= -6  /-->
 				<UP x=0 y=1 z=0 />
 			</camera>
 		</cameras>
