@@ -196,6 +196,8 @@ void main() {
 	// tone mapping
 	vec3 white_point = vec3(1.0);
 	result = pow(vec3(1.0) - exp(-result / white_point * exposure), vec3(1.0 / 2.2));
-	
+	if(length(result) == 0 ){
+        result = vec3(0.5, 0.5, 0.2);
+    }
 	outputF = vec4(result, 1);
 }

@@ -194,7 +194,7 @@ float getErosion(vec3 pos){
 
 // -------------------- Funções de heightGradiente ------------------------ */
 float density_gradient_stratus(const float h){
-    return max(smoothstep(0.0, 0.14, h) - smoothstep(0.07, 0.25, h), 0.0); // stratus, could be better
+    return max(smoothstep(0.0, 0.14, h) - smoothstep(0.07, 0.5, h), 0.0); // stratus, could be better
     return (smoothstep(0.07, 0.15, h));// - smoothstep(0.0, 0.11, h)); // stratus, could be better
 }
 
@@ -217,9 +217,9 @@ float HeightGradient(vec3 pos, float cloudType, float h_cloud) {
     
     vec3 pesos; 
     if( cloudType < 0.1)
-        pesos = vec3(1.0, 0.0, 0.0);
-    else if(cloudType < 0.75)
-        pesos = vec3(0.0, 1.0, 0.0);
+        pesos = vec3(1.0, 1.10, 0.0);
+    else if(cloudType < 0.6)
+        pesos = vec3(0.10, 1.0, 0.20);
     else 
         pesos = vec3(0.0, 0.0, 1.0);
     
@@ -237,14 +237,15 @@ float HeightGradient(vec3 pos, float cloudType, float h_cloud) {
     float grad_cloud = smoothstep(cloudGradient.x, cloudGradient.y, pos.y) 
                             - smoothstep(cloudGradient.z, cloudGradient.w, pos.y);
     
-    return mix(grad_cloud, grad_pesos, 0.5);
+    return grad_pesos;
+    //return mix(grad_cloud, grad_pesos,  0.5);
     */
 
     //Nuvens rasteiras e com pouca altura
-    if((cloudType < 0.15) ){
+    if((cloudType < 0.1) ){
         atenuacao = density_gradient_stratus(pos.y);
     }else
-        if((cloudType < 0.8) ){
+        if((cloudType < 0.9) ){
             atenuacao = density_gradient_cumulus(pos.y);
         }else
             atenuacao = density_gradient_cumulonimbus(pos.y);
@@ -323,7 +324,7 @@ vec3 computDirectLight(vec3 step_pos){
 
     // compute the possible oclusion of other clouds to the direct sun light 
     vec3 color = vec3(0.0, 0.0, 0.0);
-    vec3 l_sun = 10*vec3(lDiffuse.rgb); 
+    vec3 l_sun = vec3(lDiffuse.rgb);
     color = l_sun; 
 
     float Tr = 1; 
@@ -337,7 +338,7 @@ vec3 computDirectLight(vec3 step_pos){
             
             if(Tr < 0.01) break; 
             Tr *= transmittance ;
-            color *= transmittance ; 
+            //color *= transmittance ; 
         }
         
 
@@ -360,6 +361,22 @@ vec3 computDirectLight(vec3 step_pos){
         light : direção da luz
         step_dir : "direção da camara" no percurso do Ray Marching
     f(x) = (1 - g^2) / (4PI * (1 + g^2 - 2g*cos(teta))^[3/2])        */
+
+float phase_functionSchlick(float g , vec3 light, vec3 step_dir) {
+    float pi = 3.14159;
+
+    float k = 1.55*g - 0.55*pow(g, 3); 
+
+    // 1 - k^2
+    float n = 1 - pow(k , 2); 
+    
+    // 4pi *(1 + k*cos(x))^2
+    float cos_teta = dot(step_dir, light); // cos(x)
+    float d = 4*pi *pow(1 + k*cos_teta, 2) + 0.0001; 
+
+    return  float(n /d);
+}
+
 float phase_functionHG(float g , vec3 light, vec3 step_dir) {
     double pi = 3.14159;
 
@@ -404,11 +421,19 @@ float Scattering(float density, vec3 step_pos, vec3 step_dir){
     float g0 = g0_phase_function;
     float g1 = g1_phase_function;
 
+    float phase_G0, phase_G1; 
+
     // Henyey-Greenstein function:
-    
+    //phase_G0 = phase_functionHG(g0, dir_to_sun, step_dir);
+    //phase_G1 = phase_functionHG(g1, dir_to_sun, step_dir);
+
     // Cornette-Shank aproach
-    float phase_G0 = phase_functionCS(g0, dir_to_sun, step_dir);
-    float phase_G1 = phase_functionCS(g1, dir_to_sun, step_dir);
+    phase_G0 = phase_functionCS(g0, dir_to_sun, step_dir);
+    phase_G1 = phase_functionCS(g0, dir_to_sun, step_dir);
+    
+    // Schlick approximation of HG function 
+    //phase_G0 = phase_functionSchlick(g0, dir_to_sun, step_dir);
+    //phase_G1 = phase_functionSchlick(g1, dir_to_sun, step_dir);
    
     float phase = mix(phase_G1, phase_G0, phase_mix);
     
@@ -430,17 +455,15 @@ float Transmittance(float density, float l, vec3 step_dir){
     float sigmaExt   = (sigmaAbs + sigmaScatt); // sigma Extintion 
     
     // Beers Law  E = exp(-l)
-    //float beers = exp(- l * density);
-    //return exp(- l * density);
+    //float beers = exp(- l * sigmaExt);
 
     // Powder Law E = 1 - exp(-l*2)
-    //float powder = (1 - exp(- l * density * 2 ));
-    //return  (1 - exp(- l * 2 ));
-
+    //float powder = (1 - exp(- l * sigmaExt * 2 ));
 
     // Beer's Powder 
-    return exp(-sigmaExt * l);
+    return exp( -sigmaExt * l);
     
+    /*
     // proposta de Juraj Palenik master thesis 
     vec2 sunAnglesRad = vec2(sunAngles.x, sunAngles.y) * vec2(PI/180);
     vec3 dir_to_sun = vec3(cos(sunAnglesRad.y) * sin(sunAnglesRad.x),
@@ -448,13 +471,13 @@ float Transmittance(float density, float l, vec3 step_dir){
                             -cos(sunAnglesRad.y) * cos(sunAnglesRad.x));
 
     step_dir = normalize(step_dir);
-    float cos_teta = (dot(dir_to_sun, step_dir)); // cos(x)
+    float cos_teta = max(0.0, dot(dir_to_sun, step_dir)); // cos(x)
     
     float BP_exp1 = exp(-(sigmaAbs)*l);
-    float BP_exp2 = 1 - ((cos_teta + 1)/2) * exp(-sigmaExt * l); 
+    float BP_exp2 =  1 - ((cos_teta + 1)/2) * exp(-sigmaExt * l); 
     return BP_exp1 * BP_exp2;  
-    
-}
+*/
+}   
 
 void ComputLight(vec3 RayOrigin, vec3 rayDirection, vec3 atual_pos, float density, 
                  out vec3 S, out float Tr){ 
@@ -472,11 +495,11 @@ void ComputLight(vec3 RayOrigin, vec3 rayDirection, vec3 atual_pos, float densit
     
     //---   Evaluate direct loght ---
     vec3 direct_light =  computDirectLight(atual_pos);
-    //vec3 direct_light = skyColor(atual_pos);
+    //direct_light = skyColor(atual_pos);
     
     //---   Combine everything   ---
-    float sigmaExt = (sigmaAbsorption + sigmaScattering) * density;  // sigma Extintion 
-    S =  (direct_light * phase + ambiente_light) * sigmaScattering ;
+    float sigmaExt = ( sigmaAbsorption*(density) + sigmaScattering);  // sigma Extintion 
+    S =  (direct_light * phase + ambiente_light) * sigmaExt ;
 }
 
 void main() {
@@ -511,6 +534,7 @@ void main() {
     vec4 BG_color = vec4(skyColor(pos), 0.0);
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
 
+
     // Ray Marching no Volume  
     for (;  travel != 0;  travel--) {
         float density = getDensity(pos);
@@ -522,56 +546,44 @@ void main() {
             ComputLight(rayStart, rayDirection, pos, density, S, Tr);
              
             // analytic conservative light scattering 
-            // technicaly u should also multiply the sigmaExt with density 
             float sigmaExt = (sigmaAbsorption + sigmaScattering)* density;
-            float clampedExtinction = max( sigmaExt , 0.00000001) ;
+            float clampedExtinction = max( sigmaExt , 0.0000001) ;
 
             if(transmittance < 0.01) break; 
 
             Sint = (S - S* Tr) / ( clampedExtinction );
-            scatteredLight += Sint * transmittance;
+            scatteredLight += transmittance * (Sint + BG_color.rgb);
             transmittance  *= Tr;
 
-
-            color.rgb = transmittance*BG_color.rgb + scatteredLight; 
-            color.a   = 1; 
+            color.rgb = BG_color.rgb * vec3(transmittance) + scatteredLight;  
+            color.a   += transmittance; 
         }
         pos += step;
     }
     
     // tonemapping operator
+    vec3 mapped; 
+
     // Reinhard: pow( clamp(atmos / (atmos+1.0),0.0,1.0), vec3(1.0/2.2) );
-    //color.a = pow( clamp(color.a/(color.a+1.0), 0.0,1.0), (1.0/0.2));
-    //vec3 mapped = clamp(color.rgb / (color.rgb + 1.0), 0.0, 1.0);
-    //color.rgb = mapped; //pow( mapped, vec4(1.0 / gamma) );
+    // gamma ~ 0.7 was found to be a good starting point
+    mapped = clamp(color.rgb / (color.rgb + 1.0), 0.0, 1.0);
+    vec3 color_reinhard = pow( mapped, vec3(1.0 / 0.7) );
+    
     
     // Logarithmic: pow( clamp(smoothstep(0.0, 12.0, log2(1.0+atmos)),0.0,1.0), vec3(1.0/2.2) ); */
-    //color.a = pow( clamp(smoothstep(0.0, 7.0, log2(1.0+color.a)),0.0,1.0), (1.0/2.2));
-    //vec4 mapped2 = clamp(smoothstep(0.0, 6.0, log2(1.0+color)), 0.0, 1.0);
-    //color = pow( (mapped2), vec4(1.0 / gamma));
-    
-    //color = pow( 0.5*(mapped + mapped2), vec4(1.0 / 4.2));
-    
-    /*
-    float exposure = 1; 
-    float exposure1 = 0.05;
-    color.a = pow(1.0 - exp(-color.a * exposure1), (1.0/2.2));
-    vec3 mapped = vec3(1.0) - exp(-color.rgb * exposure); 
-    color.rgb = pow( mapped, vec3(1.0 / 2.2) );
-     */
+    // gamma ~ 6.0 was found to be a good parameter
+    //mapped = clamp(smoothstep(0.0, gamma, log2(1.0 + color.rgb)), 0.0, 1.0);
+    //vec3 color_log = pow( (mapped), vec3(1.0 / 1.2));
 
-    
-    // tone mapping
-    float base_point = 50;
+    // tone mapping using whit point 
+    float base_point = 250;
     float max_iterations = 512.0;
     vec3 white_point = vec3(base_point * (volume_steps / max_iterations));
-    color.rgb = pow(vec3(1.0) - exp(-color.rgb / white_point), vec3(1.0 / 2.2));
-    //acolor.a = pow((1.0) - exp(-color.a / 1), (1.0 / 2.2));
+    vec3 color_white_point = pow(vec3(1.0) - exp(-color.rgb / white_point), vec3(1.0 / 6.0));    
+ 
+    color.rgb = mix(color_reinhard, color_white_point, 0.95);
     
-
     FragColor = color;
-    //FragColor.rgb = color.rgb;
-    //FragColor.a =color.a;
 }
 
 
@@ -703,6 +715,10 @@ vec3 skyColor(vec3 pos) {
     // tone mapping
     vec3 white_point = vec3(1.0);
     result = pow(vec3(1.0) - exp(-result / white_point * exposure), vec3(1.0 / 2.2));
+
+    if(length(result) <= 0 ){
+        result = vec3(0.5, 0.5, 0.2);
+    }
 
     return result;
 }
