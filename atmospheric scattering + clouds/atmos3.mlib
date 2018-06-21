@@ -49,6 +49,9 @@
 		<texture name="shapeNoise" 	filename="texturas/noiseShape.tga" />
 		<texture name="erosionNoise" filename="texturas/noiseErosion.tga" />
 		<texture name="weatherTexture" filename="texturas/weatherTexture.jpg" />
+		<texture name="weatherTexture2" filename="texturas/weatherTexture2.jpg" />
+		<texture name="weatherTexture5" filename="texturas/weatherTexture5.jpg" />
+		<texture name="weatherTexture6" filename="texturas/weatherTexture6.jpg" />
 	</textures>
 
 	<shaders>
@@ -295,6 +298,9 @@
 					<valueof uniform="sigmaScattering"
 							type="COLOR" context="CURRENT"
 							component="sigmaScattering" />	
+					<valueof uniform="k_transmittance"
+							type="COLOR" context="CURRENT"
+							component="k_transmittance" />	
 
 					<valueof uniform="threshold_erosion"
 							type="COLOR" context="CURRENT"

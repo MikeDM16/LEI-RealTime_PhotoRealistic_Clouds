@@ -104,7 +104,7 @@ vec3 skyColor(vec3 dir, vec3 sunDir, vec3 origin, float dist) {
 		vec3 samplePos = origin + (current + segLength * 0.5) * dir;
 		height = length(samplePos) - earthRadius;
 		if (height < 0) {
-			break;
+			return vec3(0.5, 0.5, 0.1);
 		}
 		float hr = exp(-height / Hr) * segLength;
 		float hm = exp(-height / Hm) * segLength;
@@ -196,8 +196,8 @@ void main() {
 	// tone mapping
 	vec3 white_point = vec3(1.0);
 	result = pow(vec3(1.0) - exp(-result / white_point * exposure), vec3(1.0 / 2.2));
-	if(length(result) == 0 ){
-        result = vec3(0.5, 0.5, 0.2);
-    }
+	//if(length(result) == 0 ){
+	//	        result = vec3(0.5, 0.5, 0.2);
+	//    }
 	outputF = vec4(result, 1);
 }

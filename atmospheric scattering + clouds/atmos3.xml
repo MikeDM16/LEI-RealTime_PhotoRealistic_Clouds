@@ -10,7 +10,7 @@
 			<attribute type="RENDERER" name="year" data="INT" value=2017 />
 			<attribute type="RENDERER" name="month" data="INT" value=11  />
 			<attribute type="RENDERER" name="day" data="INT" value=21  />
-			<attribute type="RENDERER" name="decimalHour" data="FLOAT" value=9 />
+			<attribute type="RENDERER" name="decimalHour" data="FLOAT" value=8 />
 			<attribute type="RENDERER" name="ordinalDay" data="INT" value=1 />
 			
 			<attribute type="RENDERER" name="meridian" data="INT" value=0 />
@@ -50,6 +50,7 @@
 
 			<attribute type="COLOR" name="sigmaScattering" data="FLOAT" value=0.04/>
 			<attribute type="COLOR" name="sigmaAbsorption" data="FLOAT" value=0.03/>
+			<attribute type="COLOR" name="k_transmittance" data="FLOAT" value=100/>
 			<attribute type="COLOR" name="g0_phase_function" data="FLOAT" value=0.8/>
 			<attribute type="COLOR" name="g1_phase_function" data="FLOAT" value=-0.5/>
 			<attribute type="COLOR" name="phase_mix" data="FLOAT" value=0.5/>
@@ -236,9 +237,11 @@
 					component="phase_mix" def="min=0.0 max=1 step=0.05" />
 			
 			<var label="Sigma Absorption" type="COLOR" context="atmos::clouds"
-					component="sigmaAbsorption" def="min=0.0 max=0.25 step=0.001" />
+					component="sigmaAbsorption" def="min=0.01 max=0.06 step=0.001" />
 			<var label="Sigma Scattering" type="COLOR" context="atmos::clouds"
-					component="sigmaScattering" def="min=0.0 max=0.25 step=0.001" />
+					component="sigmaScattering" def="min=0.01 max=0.06 step=0.001" />
+			<var label="k Transmittance" type="COLOR" context="atmos::clouds"
+					component="k_transmittance" def="min=0.0 max=1000 step=10" />
 			
 			<var label="RayMarch steps" type="COLOR" context="atmos::clouds"
 					component="volume_steps" def="min=0 max=512 step=32" />

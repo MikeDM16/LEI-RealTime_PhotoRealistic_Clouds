@@ -17,10 +17,12 @@ struct AABB {
 
 in Data {
 	vec3 l_dir;
+    vec2 texCoord;
 } Datain[];
 
 out Data {
 	vec3 l_dir;
+    vec2 texCoord;
 } DataOut;
 
 void emit_vert(int vert)
@@ -38,7 +40,8 @@ void emit_face(int face)
 
 void main()
 {
-    // DataOut.l_dir = DataIn.l_dir; 
+    //DataOut.texCoord = Datain.texCoord;
+    //DataOut.l_dir = DataIn.l_dir; 
 
 	//AABB aabb = AABB(vec3(-2.0), vec3(-1));
 	
