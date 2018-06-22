@@ -104,7 +104,7 @@ vec3 skyColor(vec3 dir, vec3 sunDir, vec3 origin, float dist) {
 		vec3 samplePos = origin + (current + segLength * 0.5) * dir;
 		height = length(samplePos) - earthRadius;
 		if (height < 0) {
-			return vec3(0.5, 0.5, 0.1);
+			return vec3(0.1, 0.3, 1.0);
 		}
 		float hr = exp(-height / Hr) * segLength;
 		float hm = exp(-height / Hm) * segLength;

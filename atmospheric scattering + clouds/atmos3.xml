@@ -71,7 +71,7 @@
 			</scene>
 			<scene name="cube" >
 				<geometry name = "Box" type = "BOX"  material="box" >
-					<TRANSLATE x=0 y=0 z=20 />
+					<TRANSLATE x=-3.5 y=5 z=5 />
 				</geometry>
 			</scene>
 			<!--cloud scenes-->
