@@ -10,7 +10,7 @@
 			<attribute type="RENDERER" name="year" data="INT" value=2017 />
 			<attribute type="RENDERER" name="month" data="INT" value=11  />
 			<attribute type="RENDERER" name="day" data="INT" value=21  />
-			<attribute type="RENDERER" name="decimalHour" data="FLOAT" value=8 />
+			<attribute type="RENDERER" name="decimalHour" data="FLOAT" value=11 />
 			<attribute type="RENDERER" name="ordinalDay" data="INT" value=1 />
 			
 			<attribute type="RENDERER" name="meridian" data="INT" value=0 />

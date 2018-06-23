@@ -106,7 +106,7 @@ bool IntersectBox(Ray r, out float t0, out float t1,
  	 t0 = max(tmin.x, max(tmin.y, tmin.z));
 	 t1 = min(tmax.x, min(tmax.y, tmax.z));
    
-   vec3 ray_dir   = r.Dir;
+   vec3 ray_dir = normalize(r.Dir);
    vec3 ray_p = r.Origin; 
    
    // Compute entry point 
@@ -312,46 +312,37 @@ float getDensity(vec3 pos){
 from other clouds 
    - Does another Ray March through the volume, from the step_pos along the sun direction
    - Evalute density in every step of Ray Marching  */
-vec3 computDirectLight(vec3 step_pos, vec3 step_vec, vec3 dir_to_sun){
-
-    float cosViewSun = max(0.0, dot(normalize(step_vec), normalize(-dir_to_sun)));
-
-    Ray ray_to_sun = Ray( step_pos, dir_to_sun );
+float computeOclusion(vec3 step_pos, vec3 step_vec, vec3 dir_to_sun){
+ 
+    Ray ray_to_sun = Ray( step_pos, normalize(dir_to_sun));
 
     vec3 entry, exit; 
     float tnear, tfar;
     bool r = IntersectBox(ray_to_sun, tnear, tfar, entry, exit);
     if (tnear < 0.0) tnear = 0.0;
 
-    vec3 rayStart = ray_to_sun.Origin;
+    vec3 rayStart = ray_to_sun.Origin;// + ray_to_sun.Dir * tnear;
     vec3 rayStop = ray_to_sun.Origin + ray_to_sun.Dir * tfar;
-
-    vec3 len = aabbMax - aabbMin;
-    rayStart = 1/len * (rayStart -aabbMin);
-    rayStop = 1/len * (rayStop -aabbMin);
     float rayLength = distance(rayStart, rayStop); 
 
-    int steps_aux = 5;
+
+    int steps_aux = 50;
     int steps = int(0.5 + distance(rayStop, rayStart)  * steps_aux);
     vec3 step = (rayStop-rayStart) / float(steps);
-    vec3 pos = rayStart + 0.5 * step;
-    int travel = steps;
+    vec3 pos = rayStart;
+    int travel = 50;
 
-    // compute the possible oclusion of other clouds to the direct sun light 
-    vec3 l_sun = vec3(0.1, 0.2, 1.0); //skyColor(dir_to_sun); 
-
-    float Tr = 1; 
-    for (travel = 0; travel != steps; travel++) {
+    float oclusion = 1; 
+    for (; travel != 0; travel--) {
         float density = getDensity(pos);
 
         if(density > 0 ){
             /*---   Transmittance    ---*/
             float stepSize = length(step) * rayLength; 
             float transmittance = Transmittance(density, stepSize, step, dir_to_sun); 
-            Tr *= transmittance;
-            
-            if(Tr < 0.01) break; 
-            //color *= transmittance ; 
+            oclusion *= transmittance;
+            if(oclusion < 0.01) break; 
+                       
         }
         
 
@@ -359,14 +350,11 @@ vec3 computDirectLight(vec3 step_pos, vec3 step_vec, vec3 dir_to_sun){
         every step an extra number of steps has to be taken. 
         In our implementation four steps towards the sun are taken at 
         exponentially increasing steps size (pág 29 tese)*/
-        pos += step; //pow(4, travel) * step;
+        pos += step;
+        //pos += pow(0.5, travel) * step;
     }
 
-    return 1.01*vec3(Tr);
-    if(Tr == 1) return vec3(0.5);
-    return max(cosViewSun * vec3(1), vec3(0.2));
-    //return skyColor(dir_to_sun);
-
+    return oclusion;
 }
 //------------------------------------------------------------------------
 
@@ -428,16 +416,14 @@ float Scattering(vec3 rayDirection, vec3 dir_to_sun){
     phase_G1 = phase_functionHG(g1, dir_to_sun, rayDirection);
 
     // Cornette-Shank aproach
-    //phase_G0 = 0.05*phase_functionCS(g0, dir_to_sun, rayDirection);
+    //phase_G0 = phase_functionCS(g0, dir_to_sun, rayDirection);
     //phase_G1 = 0.05*phase_functionCS(g0, dir_to_sun, rayDirection);
     
     // Schlick approximation of HG function 
     //phase_G0 = phase_functionSchlick(g0, dir_to_sun, rayDirection);
     //phase_G1 = phase_functionSchlick(g1, dir_to_sun, rayDirection);
 
-    //return phase_G0;
     float phase = mix(phase_G1, phase_G0, phase_mix);
-    
     return phase; 
 }
 //------------------------------------------------------------------------
@@ -450,12 +436,14 @@ float Scattering(vec3 rayDirection, vec3 dir_to_sun){
     step_dir - direction of the ray march or sun march step 
              -> used only for juraj formula
  */
-float Transmittance(float density, float step_length, vec3 rayDirection, vec3 dir_to_sun){
+float Transmittance(float density, float step_length, 
+                    vec3 rayDirection, vec3 dir_to_sun){
+
     float sigmaAbs   = sigmaAbsorption;
     float sigmaScatt = sigmaScattering;
     float sigmaExt   = (sigmaAbs + sigmaScatt); // sigma Extintion 
 
-    
+    /*
     // Beer's Lambert Law (used by Rurik) 
     float beers = exp( -sigmaExt * step_length * 15);
 
@@ -465,7 +453,7 @@ float Transmittance(float density, float step_length, vec3 rayDirection, vec3 di
 
     // Beers-Powder Fisrt aprroach
     //return beers;
-    //return beers * powder; 
+    return beers * powder; */
     
     // proposta de Juraj Palenik master thesis 
     rayDirection = normalize(rayDirection);
@@ -495,12 +483,12 @@ void ComputLight(vec3 RayOrigin, vec3 rayDirection, float rayLength,
     // Reduce the ambient light for the given position density
     vec3 ambiente = density * ambiente_light; 
     
-    //---   Evaluate direct loght ---       
-    vec3 direct_light = vec3(1.0) ;//computDirectLight(pos, rayDirection, dir_to_sun);
+    //---   Evaluate direct loght ---    allows shadows from other clouds   
+    vec3 direct_light = ambiente_light * computeOclusion(pos, rayDirection, dir_to_sun);
     
     //---   Combine everything   ---
     float sigmaExt = (sigmaAbsorption + sigmaScattering) * density;  // sigma Extintion 
-    S = sigmaExt * (direct_light*phase + ambiente);
+    S = sigmaExt * (direct_light + phase*ambiente);
 }
 
 void main() {
@@ -523,20 +511,17 @@ void main() {
     vec3 rayStart = entry;
     vec3 rayStop = exit;
     float rayLength = distance(rayStart, rayStop);
-    */
-    /*
+    
     vec3 bmax = vec3(10, 0.0, 10);
     vec3 bmin = vec3(-10, 5.0, -10);
-    vec3 len = vec3(1.0);// bmax - bmin;
-    rayStart = 1/len * (rayStart -bmin);
-    rayStop = 1/len * (rayStop -bmax);*/
+    vec3 len = bmax - bmin;
+    //rayStart = 1/len * (rayStart -bmin);
+    //rayStop = 1/len * (rayStop -bmax);*/
     
     vec3 rayStart = eye.Origin + eye.Dir * tnear;
     vec3 rayStop = eye.Origin + eye.Dir * tfar;
     float rayLength = distance(rayStart, rayStop);
 
-    vec3 bmax = vec3(10, 0.0, 10);
-    vec3 bmin = vec3(-10, 0.0, -10);
     vec3 len = aabbMax - aabbMin;
     rayStart = 1/len * (rayStart -aabbMin);
     rayStop = 1/len * (rayStop -aabbMin);
@@ -562,11 +547,12 @@ void main() {
     vec3 scatteredLight = vec3(0.0);
     float transmittance = 1;
 
+    int i = 0; 
     // Ray Marching no Volume  
     for (;  travel != 0;  travel--) {
         float density = getDensity(pos);
     
-        if(density > 0){
+        if(density > 0.01){
             vec3 Sint;
             vec3 Step_Scatt; 
             float Step_Tr; 
@@ -586,26 +572,27 @@ void main() {
             // Accumulate extinction for that step
             transmittance *= Step_Tr; 
             if(transmittance < 0.01) break; 
-            color.a = 1;
+            
+            color.a = 1; 
         }
 
         pos += step;
     }
     
     // phase functions
-    float cosViewSun = dot(step, dir_to_sun);
+    float cosViewSun = dot(normalize(step), normalize(dir_to_sun));
     float phaseR = 0.75 * (1.0 + cosViewSun * cosViewSun);
     
-    color.rgb = (BG_color*transmittance + scatteredLight); //-> Teste phase com fundo branco
+    color.rgb = (BG_color*transmittance*phaseR + scatteredLight); //-> Teste phase com fundo branco
     //color.rgb = (BG_color + scatteredLight) * transmittance; //-> Teste phase com cor ceu
     
     //color.rgb = vec3(1.0) * transmittance; //-> Teste transmittance fundo branco
     //color.rgb = BG_color * transmittance; //-> Teste transmittance cor ceu 
 
+    /*
     // tonemapping operator
     vec3 mapped; 
-
-    /*
+    
     // Reinhard: 
     mapped = clamp(color.rgb / (color.rgb + 1.0), 0.0, 1.0);
     vec3 color_reinhard = pow( mapped, vec3(1.0 / gamma) );
@@ -614,10 +601,10 @@ void main() {
     mapped = clamp(smoothstep(0.0, 2.0, log2(1.0 + color.rgb)), 0.0, 1.0);
     vec3 color_log = pow( (mapped), vec3(1.0 / gamma));
 
-    color.rgb = mix(color_reinhard, color_log, 0.5);
+    color.rgb = mix(color_reinhard, color_log, 0.0);
     color.rgb += 0.2*(BG_color*transmittance);
     */
-
+    
     /*
     // tone mapping using whit point 
     float base_point = 150;
