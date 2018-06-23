@@ -1,0 +1,138 @@
+#version 430
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+const float earthRadius = 6360000.0;
+const float atmosRadius = 6440000.0;
+const float PI = 3.14159265358979323846;
+
+uniform int divisions;
+uniform float Hr = 7994;
+uniform float Hm = 1200;
+uniform int texSize;
+
+layout(std430, binding = 1) buffer opticalDepth {
+	vec4 od[];
+};
+
+layout(binding = 1, rg32f) uniform writeonly image2D imageUnit;
+
+
+bool intersectEarth(vec3 origin, vec3 dir) {
+
+	// project the center of the earth on to the ray
+	vec3 u = vec3(-origin);
+	// k is the signed distance from the origin to the projection
+	float k = dot(dir,u);
+	if (k < 0)
+		return false;
+	vec3 proj = origin + k * dir;
+	float aux = length(proj); 
+	if (aux > earthRadius)
+		return false;
+
+	float dist = sqrt(earthRadius * earthRadius - aux*aux);
+	
+	return true;
+}
+
+
+float distToTopAtmosphere(vec3 origin, vec3 dir) {
+
+	// project the center of the earth on to the ray
+	vec3 u = vec3(-origin);
+	// k is the signed distance from the origin to the projection
+	float k = dot(dir,u);
+	vec3 proj = origin + k * dir;
+	
+	// compute the distance from the projection to the atmosphere
+	float aux = length(proj); 
+	float dist = sqrt(atmosRadius * atmosRadius - aux*aux);
+	
+	dist += k;	
+	return dist;
+}
+
+
+vec2 computeOpticalDepth(vec3 origin, float dist, vec3 dir) {
+
+	float segLength = dist / divisions;
+	float opticalDepthRayleigh = 0;
+	float opticalDepthMie = 0;
+	
+	float current = 1;
+	for(int i = 0; i < divisions; ++i) {
+		vec3 samplePos = origin + (current + segLength * 0.5) * dir;
+		float height = length(samplePos) - earthRadius;
+		if (height < 0)
+			return vec2(-1, -1);
+
+		opticalDepthRayleigh += exp(-height / Hr) * segLength;
+		opticalDepthMie += exp(-height / Hm) * segLength;
+
+		current += segLength;
+	}
+	return vec2(opticalDepthRayleigh, opticalDepthMie);
+}
+
+
+void main() {
+
+	vec2 result;
+	
+	ivec2 storeLoc = ivec2(gl_GlobalInvocationID);
+	
+	vec2 u = storeLoc*1.0/texSize;
+	
+	float height = u.x * u.x * Hr;
+	
+	float angle;
+	float ch = - sqrt(height * (2 * earthRadius + height))/(height+earthRadius);
+	if (u.y > 0.5) 
+		angle = ch + pow(u.y - 0.5, 5) * (1-ch);
+	else
+		angle = ch - pow(u.y, 5) * (1+ch);
+	angle = acos(angle);
+	
+	angle = tan((2*u.y - 1 + 0.26) * 1.1)/tan(1.26 * 1.1);
+	angle = acos(clamp(angle,0,1));
+	
+
+	vec3 origin = vec3(0.0, earthRadius + height, 0.0);
+	vec3 dir = vec3(sin(angle), cos(angle), 0.0);
+	
+	//if (!intersectEarth(origin, dir)) {
+		float dist = distToTopAtmosphere(origin, dir);
+		result = computeOpticalDepth(origin, dist, dir);
+	//}
+	//else
+	//	result = vec2(0,0);
+		
+	//od[storeLoc.x * texSize + storeLoc.y] =  vec4(result, height, angle);
+	imageStore(imageUnit, ivec2(storeLoc.x, storeLoc.y), vec4(result,0,0));
+}
+
+/*
+void main() {
+
+	vec2 result;
+	
+	ivec2 storeLoc = ivec2(gl_GlobalInvocationID);
+	
+	float height = earthRadius + 1 + (storeLoc.x)* (atmosRadius - earthRadius) / texSize;
+	float angle = (storeLoc.y) * (PI * 0.60) / texSize;
+	
+	vec3 origin = vec3(0.0, height, 0.0);
+	vec3 dir = vec3(sin(angle), cos(angle), 0.0);
+	
+	//if (!intersectEarth(origin, dir)) {
+		float dist = distToTopAtmosphere(origin, dir);
+		result = computeOpticalDepth(origin, dist, dir);
+	//}
+	//else
+	//	result = vec2(0,0);
+		
+	//od[storeLoc.x * texSize + storeLoc.y] =  vec4(result, height, angle);
+	imageStore(imageUnit, ivec2(storeLoc.x, storeLoc.y), vec4(result,0,0));
+}
+*/

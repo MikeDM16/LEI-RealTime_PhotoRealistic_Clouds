@@ -54,6 +54,8 @@
 			<attribute type="COLOR" name="g0_phase_function" data="FLOAT" value=0.8/>
 			<attribute type="COLOR" name="g1_phase_function" data="FLOAT" value=-0.5/>
 			<attribute type="COLOR" name="phase_mix" data="FLOAT" value=0.5/>
+			<attribute type="COLOR" name="atmosphere_start" data="FLOAT" value=5/>
+			<attribute type="COLOR" name="atmosphere_end" data="FLOAT" value=8/>
 
 			<attribute type="COLOR" name="volume_steps" data="INT" value=128/>
 			<attribute type="COLOR" name="gamma" data="FLOAT" value=2.2/>
@@ -69,11 +71,13 @@
 				<SCALE x=100 y=100 z=100 />
 				<file name="./models/plane.obj"/>
 			</scene>
+
 			<scene name="cube" >
 				<geometry name = "Box" type = "BOX"  material="box" >
 					<TRANSLATE x=-3.5 y=5 z=5 />
 				</geometry>
 			</scene>
+			
 			<!--cloud scenes-->
 			<scene name="Dummy" >
 				<buffers name="positions" primitive="POINTS" material="showRays">
@@ -92,6 +96,35 @@
 			-->
 		</scenes>
 		
+		<!--sensors>
+			<sensor name="tsensor" class="TimeSensor">
+				<enabled value="1" />
+				<secondsToStart value="0" />
+				<cycleInterval value="20" />
+				<loop value="1" />
+			</sensor>
+		</sensors>
+		
+		<interpolators>
+			<interpolator name="Rotation" class="PositionInterpolator">
+				<keyFrames>
+					<keyFrame key=0.0 w=0   y=1.0/>
+					<keyFrame key=0.5 w=180 y=1.0/>
+					<keyFrame key=1.0 w=360 y=1.0/>
+				</keyFrames>
+			</interpolator>
+		</interpolators>
+
+		<routes>
+			<route name="timer2interpol" sender="tsensor" receiver="Rotation" 
+					eventOut="TIMESENSOR_FRACTION_CHANGED"
+					eventIn="SET_INTERPOLATOR_FRACTION" />
+
+			<route name="interpol2scene" sender="Rotation" receiver="Dummy"
+					eventOut="INTERPOLATOR_POSITION"
+					eventIn="SET_ROTATION" />
+		</routes-->
+
 		<viewports>
 			<viewport name="MainViewport">
 				<CLEAR_COLOR r="0.2" g="0.5" b="1.0" />
@@ -182,7 +215,6 @@
 							def="min=1.00001 max=1.00200 step=0.00001" script="atmosConfigChanged" scriptFile="interface.lua"/>
 			<var label="wave lengths" type="RENDERER" context="CURRENT" component="waveLengths"  
 							script="atmosConfigChanged" scriptFile="interface.lua"/>
-
 		</window>	
 		
 		<window label="Algorithm" >

@@ -1,0 +1,21 @@
+Tarefas a fazer: 
+
+(1) 	Replicar a mesma weather texture para ocupar todo o céu. 
+	Usar a mesma ideia que se tentou no inicio do projeto: ter tudo em coordenas mundo
+e ver se o raio interseta, por exemplo, o plano y = 1000. 
+	O prof diz que basta usar o RayOrigem que ele tem no main, pq supostamente já está 
+no espaço mundo
+
+	Conforme o x e y no plano intersetado, usar um offset marado, tipo 0.157372 para ir buscar uma
+coordenada à textura. 
+
+(2) Introduzir "movimento" nas nossas nuvens. 
+	Talvez exista na NAU um parametro de tempo. Se usarmos um fator do tipo (segundos/100) temos 
+uma escala entre 0.0 e 0.60 para controlar dinamicamente a quantidade de erosão e assim simular
+o desfazer e refazer da nuvem (tipo o gif da apresentação)
+
+(3)	Rever toda a iluminação, pq continua a estar mal. E as nuvens devem ser mais influenciadas pela
+cor do ceu, principalmente na fase do por do sol / nascer do sol. 
+	Voltar a rever cada propriedade uma a uma, e ver se estão mesmo bem e onde começa a aparecer merda. 
+
+>  O prof diz que as nuvens vistas de baixo parecem invertidas. Mas pode ser pq o calculo da luz esteja mal
