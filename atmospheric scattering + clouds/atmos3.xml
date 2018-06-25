@@ -46,7 +46,7 @@
 			<attribute name="aabbMax" type="PASS" data="VEC3" x=5 y= 8 z=5/>
 			
 			<attribute type="COLOR" name="threshold_erosion" data="FLOAT" value=0.15/>
-			<attribute type="COLOR" name="erosion_amount" data="FLOAT" value=50/>
+			<attribute type="COLOR" name="erosion_amount" data="FLOAT" value=1/>
 
 			<attribute type="COLOR" name="sigmaScattering" data="FLOAT" value=0.04/>
 			<attribute type="COLOR" name="sigmaAbsorption" data="FLOAT" value=0.03/>
@@ -259,7 +259,7 @@
 			<var label="Threshold Erosion" type="COLOR" context="atmos::clouds"
 					component="threshold_erosion" def="min=0.0 max=1.0 step=0.01" />
 			<var label="Erosion amount" type="COLOR" context="atmos::clouds"
-					component="erosion_amount" def="min=0.0 max=250 step=1" />
+					component="erosion_amount" def="min=0.0 max=2 step=0.1" />
 			
 			<var label="G0 Phase Function" type="COLOR" context="atmos::clouds"
 					component="g0_phase_function" def="min=-0.99 max=0.99 step=0.05" />

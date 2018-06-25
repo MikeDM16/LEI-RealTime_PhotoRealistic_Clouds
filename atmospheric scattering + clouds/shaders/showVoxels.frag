@@ -152,8 +152,8 @@ float HeightSignal(vec3 pos, float h_start, float h_cloud) {
     //h_start   = sky_start + h_start*layer_Height;
     //h_cloud   = h_cloud * layer_Height; 
 
-    float r  = (atm - h_start)*(atm - h_start - h_cloud);
-    r *= (-4 / (h_cloud * h_cloud + 0.00001));
+    float r = (atm - h_start )*(atm - h_start - h_cloud);
+    r *= (-4 / (pow(h_cloud, 2) + 0.00001));
     return r;
 
 }
@@ -172,18 +172,10 @@ float getShape(vec3 pos){
     if((pos.z < 0.05 || pos.z > 0.95) || (pos.x < 0.05 || pos.x > 0.95)) {
         return 0.0;
     }
-
+    
     vec4 densidades = texelFetch(shapeNoise, ivec2(textCoord), 0).rgba;
 
-    float densidadeR = densidades.r;
-    float densidadeG = densidades.g;
-    float densidadeB = densidades.b;
-    float densidadeA = densidades.a;
-
-    return 0.625*densidadeR + 0.5*densidadeG + 0.25*densidadeB + 0.125 * densidadeA; 
-    
-    //return 0.625*densidadeR * 0.5*densidadeG * 0.125*densidadeB; 
-    //return densidadeR* densidadeG *densidadeB * densidadeA ;
+    return dot(vec4(0.625, 0.25, 0.125, 0.07), densidades);
 }
 //------------------------------------------------------------------------
 
@@ -198,13 +190,9 @@ float getErosion(vec3 pos){
     vec3 densidades = texelFetch(erosionNoise, ivec2(textCoord), 0).rgb; 
     //vec3 densidades = texture(erosionNoise, ivec2(textCoord.x/erosionWidth, pos.z), level).rgb; 
 
-    float densidadeR =  densidades.r;
-    float densidadeG =  densidades.g;
-    float densidadeB =  densidades.b;
-    
-    return densidadeR * densidadeG * densidadeB; 
-    //return 0.625*densidadeR * 0.5*densidadeG * 0.125*densidadeB; 
+    return dot(vec3(0.625, 0.25, 0.125), densidades);
 }
+
 //------------------------------------------------------------------------
 float random(vec2 st){
     return fract(sin(dot(st.xy, vec2(12.9898,78.233)))*43758.5453123);
@@ -212,8 +200,8 @@ float random(vec2 st){
 
 // -------------------- Funções de heightGradiente -----------------------
 float density_gradient_stratus(const float h){
-    return smoothstep(0.00, 0.26, h);
-    //return max(smoothstep(0.0, 0.05, h) - smoothstep(0.05, 0.22, h), 0.0); // stratus, could be better
+    return smoothstep(0.00, 0.16, h);
+    //return max(smoothstep(0.0, 0.05, h) - smoothstep(0.05, 0.92, h), 0.0); // stratus, could be better
 }
 
 float density_gradient_cumulus(const float h){
@@ -326,11 +314,11 @@ float computeOclusion(vec3 step_pos, vec3 step_vec, vec3 dir_to_sun){
     float rayLength = distance(rayStart, rayStop); 
 
 
-    int steps_aux = 50;
+    int steps_aux = 150;
     int steps = int(0.5 + distance(rayStop, rayStart)  * steps_aux);
     vec3 step = (rayStop-rayStart) / float(steps);
     vec3 pos = rayStart;
-    int travel = 50;
+    int travel = steps - (steps - 50);
 
     float oclusion = 1; 
     for (; travel != 0; travel--) {
@@ -341,17 +329,16 @@ float computeOclusion(vec3 step_pos, vec3 step_vec, vec3 dir_to_sun){
             float stepSize = length(step) * rayLength; 
             float transmittance = Transmittance(density, stepSize, step, dir_to_sun); 
             oclusion *= transmittance;
-            if(oclusion < 0.01) break; 
+            if(oclusion < 0.25) break; 
                        
         }
         
-
         /*Marching towards the sun has a great impact on performance since for 
         every step an extra number of steps has to be taken. 
         In our implementation four steps towards the sun are taken at 
         exponentially increasing steps size (pág 29 tese)*/
         pos += step;
-        //pos += pow(0.5, travel) * step;
+        //pos += pow(2, travel) * step;
     }
 
     return oclusion;
@@ -416,15 +403,15 @@ float Scattering(vec3 rayDirection, vec3 dir_to_sun){
     phase_G1 = phase_functionHG(g1, dir_to_sun, rayDirection);
 
     // Cornette-Shank aproach
-    //phase_G0 = phase_functionCS(g0, dir_to_sun, rayDirection);
+    //phase_G0 = *hase_functionCS(g0, dir_to_sun, rayDirection);
     //phase_G1 = 0.05*phase_functionCS(g0, dir_to_sun, rayDirection);
     
     // Schlick approximation of HG function 
     //phase_G0 = phase_functionSchlick(g0, dir_to_sun, rayDirection);
     //phase_G1 = phase_functionSchlick(g1, dir_to_sun, rayDirection);
 
-    float phase = mix(phase_G1, phase_G0, phase_mix);
-    return phase; 
+    return mix(phase_G1, phase_G0, phase_mix);
+
 }
 //------------------------------------------------------------------------
 
@@ -488,7 +475,7 @@ void ComputLight(vec3 RayOrigin, vec3 rayDirection, float rayLength,
     
     //---   Combine everything   ---
     float sigmaExt = (sigmaAbsorption + sigmaScattering) * density;  // sigma Extintion 
-    S = sigmaExt * (direct_light + phase*ambiente);
+    S = sigmaExt* (direct_light + phase*ambiente);
 }
 
 void main() {
@@ -518,7 +505,7 @@ void main() {
     //rayStart = 1/len * (rayStart -bmin);
     //rayStop = 1/len * (rayStop -bmax);*/
     
-    vec3 rayStart = eye.Origin + eye.Dir * tnear;
+    vec3 rayStart = eye.Origin;// + eye.Dir * tnear;
     vec3 rayStop = eye.Origin + eye.Dir * tfar;
     float rayLength = distance(rayStart, rayStop);
 
@@ -568,7 +555,7 @@ void main() {
             
             // Accumulate scattering attenuated by extinction
             scatteredLight += Sint * transmittance; 
-            
+
             // Accumulate extinction for that step
             transmittance *= Step_Tr; 
             if(transmittance < 0.01) break; 
@@ -589,32 +576,27 @@ void main() {
     //color.rgb = vec3(1.0) * transmittance; //-> Teste transmittance fundo branco
     //color.rgb = BG_color * transmittance; //-> Teste transmittance cor ceu 
 
-    /*
+    
     // tonemapping operator
     vec3 mapped; 
     
     // Reinhard: 
     mapped = clamp(color.rgb / (color.rgb + 1.0), 0.0, 1.0);
-    vec3 color_reinhard = pow( mapped, vec3(1.0 / gamma) );
+    vec3 color_reinhard = pow( mapped, vec3(1.0 / 1.7) );
     
     // Logarithmic:
-    mapped = clamp(smoothstep(0.0, 2.0, log2(1.0 + color.rgb)), 0.0, 1.0);
-    vec3 color_log = pow( (mapped), vec3(1.0 / gamma));
-
-    color.rgb = mix(color_reinhard, color_log, 0.0);
-    color.rgb += 0.2*(BG_color*transmittance);
-    */
+    mapped = clamp(smoothstep(0.0, 1.07, log2(1.0 + color.rgb)), 0.0, 1.0);
+    vec3 color_log = pow( (mapped), vec3(1.0 / 1.1)); // gamma = 0.7
+     
+    //color.rgb = mix(color_reinhard, color_log, 0.5);
     
-    /*
     // tone mapping using whit point 
-    float base_point = 150;
+    float base_point = 25;
     float max_iterations = 512.0;
     vec3 white_point = vec3(base_point * (volume_steps / max_iterations));
     vec3 color_white_point = pow(vec3(1.0) - exp(-color.rgb / white_point), vec3(1.0 / 6.0));    
-    color.rgb = color_white_point;
-    color.rgb += (BG_color*transmittance);
-    */    
-   
+    //color.rgb = color_white_point;
+     
     FragColor = color;
 }
 
