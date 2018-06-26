@@ -44,6 +44,7 @@ uniform float gamma; // for tone mapping
 uniform float atmosphere_start;
 uniform float atmosphere_end;
 
+uniform float timer;
 /*------------------------------------------------------------------------
 ------------------------------------------------------------------------*/
 uniform int divisions = 32;
@@ -281,7 +282,8 @@ float getDensity(vec3 pos){
     density *= getShape(pos);
 
     //--- Fase da Erosion ---
-    if(density < threshold_erosion)
+    float timed_erosion = threshold_erosion * (0.5 * sin(timer/5000 + 2 * cos(timer/1000)) + 0.5);
+    if(density < timed_erosion)
         density -= erosion_amount *  getErosion(pos);
     
     // Only use positive densitys after erosion !

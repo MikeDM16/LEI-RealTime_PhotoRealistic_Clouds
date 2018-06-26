@@ -212,20 +212,24 @@
 					<valueof uniform="FOV"
 							type="CAMERA" context="CURRENT"
 							component="FOV" />
+
 					<valueof uniform="RATIO"
 							type="VIEWPORT" context="MainViewport"
 							component="ABSOLUTE_RATIO" />
-					<valueof uniform="PVM"
-							type="RENDERER" context="CURRENT"
-							component="PROJECTION_VIEW_MODEL" />
-					
-					<valueof uniform="VM"
-							type="RENDERER" context="CURRENT"
-							component="VIEW_MODEL" />
 					<valueof uniform="WindowSize"
 							type="VIEWPORT" context="CURRENT"
 							component="ABSOLUTE_SIZE" />
-					
+
+					<valueof uniform="PVM"
+							type="RENDERER" context="CURRENT"
+							component="PROJECTION_VIEW_MODEL" />	
+					<valueof uniform="VM"
+							type="RENDERER" context="CURRENT"
+							component="VIEW_MODEL" />
+					<valueof uniform="timer"
+							type="RENDERER" context="CURRENT"
+							component="TIMER" />
+
 					<valueof uniform="shapeNoise"
 							type="TEXTURE_BINDING" context="CURRENT" id=1
 							component="UNIT" />
@@ -292,10 +296,6 @@
 					<valueof uniform="gamma"
 							type="COLOR" context="CURRENT"
 							component="gamma" />
-					
-					<!--valueof uniform="timer"
-							type="COLOR" context="CURRENT"
-							component="tsensor" /-->
 
 					<valueof uniform="atmosphere_start"
 							type="COLOR" context="CURRENT"
@@ -303,7 +303,6 @@
 					<valueof uniform="atmosphere_end"
 							type="COLOR" context="CURRENT"
 							component="atmosphere_end" />
-
 
 					<valueof uniform="aabbMin"
 							type="PASS" context="CURRENT"
