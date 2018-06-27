@@ -153,7 +153,7 @@ float HeightSignal(vec3 pos, float h_start, float h_cloud) {
     //h_start   = sky_start + h_start*layer_Height;
     //h_cloud   = h_cloud * layer_Height; 
 
-    float r = (atm - h_start )*(atm - h_start - h_cloud);
+    float r = (atm - h_start - 0.5*h_cloud)*(atm - h_start - h_cloud);
     r *= (-4 / (pow(h_cloud, 2) + 0.00001));
     return r;
 
@@ -175,7 +175,7 @@ float getShape(vec3 pos){
     }
     
     vec4 densidades = texelFetch(shapeNoise, ivec2(textCoord), 0).rgba;
-
+    
     return dot(vec4(0.625, 0.25, 0.125, 0.07), densidades);
 }
 //------------------------------------------------------------------------
@@ -679,6 +679,7 @@ vec3 skyColor(vec3 direction) {
             return vec3(1);
             return vec3(0.1, 0.3, 1.0);
         }
+
         float hr = exp(-height / Hr) * segLength;
         float hm = exp(-height / Hm) * segLength;
         opticalDepthRayleigh += hr;
