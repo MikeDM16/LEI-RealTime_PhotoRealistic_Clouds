@@ -52,6 +52,7 @@
 		<texture name="weatherTexture2" filename="texturas/weatherTexture2.jpg" />
 		<texture name="weatherTexture5" filename="texturas/weatherTexture5.jpg" />
 		<texture name="weatherTexture6" filename="texturas/weatherTexture6.jpg" />
+		<texture name="weatherTextureQ" filename="texturas/quadweath.png" />
 	</textures>
 
 	<shaders>
@@ -293,6 +294,9 @@
 					<valueof uniform="volume_steps"
 							type="COLOR" context="CURRENT"
 							component="volume_steps" />
+					<valueof uniform="shadow_steps"
+							type="COLOR" context="CURRENT"
+							component="shadow_steps" />
 					<valueof uniform="gamma"
 							type="COLOR" context="CURRENT"
 							component="gamma" />

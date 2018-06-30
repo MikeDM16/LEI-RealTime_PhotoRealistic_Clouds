@@ -20,7 +20,7 @@
 			
 			<attribute type="RENDERER" name="hr" data="FLOAT" value=7994 />
 			<attribute type="RENDERER" name="hm" data="FLOAT" value=1200 />
-			<attribute type="RENDERER" name="g" data="FLOAT" value=0.76 />
+			<attribute type="RENDERER" name="g" data="FLOAT" value=0.987 />
 			<attribute type="RENDERER" name="betaR" data="VEC3" 
 							x=3.67044e-07 y=1.11688e-06 z=1.80601e-06 />
 			<attribute type="RENDERER" name="waveLengths" data="VEC3" x="700" y="530" z="470" />
@@ -56,7 +56,8 @@
 			<attribute type="COLOR" name="atmosphere_start" data="FLOAT" value=5/>
 			<attribute type="COLOR" name="atmosphere_end" data="FLOAT" value=8/>
 
-			<attribute type="COLOR" name="volume_steps" data="INT" value=128/>
+			<attribute type="COLOR" name="volume_steps" data="INT" value=300/>
+			<attribute type="COLOR" name="shadow_steps" data="INT" value=30/>
 			<attribute type="COLOR" name="gamma" data="FLOAT" value=2.2/>
 
 			<!-- terrain parameters -->
@@ -276,7 +277,8 @@
 			
 			<var label="RayMarch steps" type="COLOR" context="atmos::clouds"
 					component="volume_steps" def="min=0 max=512 step=32" />
-			
+			<var label="Shadow steps" type="COLOR" context="atmos::clouds"
+					component="shadow_steps" def="min=1 max=256 step=32" />
 			<var label="Gamma" type="COLOR" context="atmos::clouds"
 					component="gamma" def="min=0.001 max=10 step=0.1" />
 			<var label="Hour of day" type="RENDERER" context="CURRENT" component="decimalHour" 

@@ -40,6 +40,7 @@ uniform float sigmaAbsorption;
 uniform float sigmaScattering;
 uniform float k_transmittance; 
 uniform int volume_steps; // for Ray Marching 
+uniform int shadow_steps; // for shadow oclusion 
 uniform float gamma; // for tone mapping 
 uniform float atmosphere_start;
 uniform float atmosphere_end;
@@ -316,11 +317,11 @@ float computeOclusion(vec3 step_pos, vec3 step_vec, vec3 dir_to_sun){
     float rayLength = distance(rayStart, rayStop); 
 
 
-    int steps_aux = 150;
+    int steps_aux = max(250, shadow_steps);
     int steps = int(0.5 + distance(rayStop, rayStart)  * steps_aux);
     vec3 step = (rayStop-rayStart) / float(steps);
     vec3 pos = rayStart;
-    int travel = steps - (steps - 50);
+    int travel = shadow_steps;
 
     float oclusion = 1; 
     for (; travel != 0; travel--) {
@@ -331,7 +332,7 @@ float computeOclusion(vec3 step_pos, vec3 step_vec, vec3 dir_to_sun){
             float stepSize = length(step) * rayLength; 
             float transmittance = Transmittance(density, stepSize, step, dir_to_sun); 
             oclusion *= transmittance;
-            if(oclusion < 0.25) break; 
+            if(oclusion < 0.15) break; 
                        
         }
         
@@ -405,8 +406,8 @@ float Scattering(vec3 rayDirection, vec3 dir_to_sun){
     phase_G1 = phase_functionHG(g1, dir_to_sun, rayDirection);
 
     // Cornette-Shank aproach
-    //phase_G0 = *hase_functionCS(g0, dir_to_sun, rayDirection);
-    //phase_G1 = 0.05*phase_functionCS(g0, dir_to_sun, rayDirection);
+    //phase_G0 = phase_functionCS(g0, dir_to_sun, rayDirection);
+    //phase_G1 = phase_functionCS(g0, dir_to_sun, rayDirection);
     
     // Schlick approximation of HG function 
     //phase_G0 = phase_functionSchlick(g0, dir_to_sun, rayDirection);
@@ -477,7 +478,7 @@ void ComputLight(vec3 RayOrigin, vec3 rayDirection, float rayLength,
     
     //---   Combine everything   ---
     float sigmaExt = (sigmaAbsorption + sigmaScattering) * density;  // sigma Extintion 
-    S = sigmaExt* (direct_light + phase*ambiente);
+    S = sigmaExt * (direct_light + phase*ambiente);
 }
 
 void main() {
@@ -584,20 +585,21 @@ void main() {
     
     // Reinhard: 
     mapped = clamp(color.rgb / (color.rgb + 1.0), 0.0, 1.0);
-    vec3 color_reinhard = pow( mapped, vec3(1.0 / 1.7) );
+    vec3 color_reinhard = pow( mapped, vec3(1.0 / 1.3) );
     
     // Logarithmic:
     mapped = clamp(smoothstep(0.0, 1.07, log2(1.0 + color.rgb)), 0.0, 1.0);
     vec3 color_log = pow( (mapped), vec3(1.0 / 1.1)); // gamma = 0.7
      
-    //color.rgb = mix(color_reinhard, color_log, 0.5);
-    
+    color.rgb = mix(color_reinhard, color_log, 0.5);
+
+    /*
     // tone mapping using whit point 
     float base_point = 25;
     float max_iterations = 512.0;
     vec3 white_point = vec3(base_point * (volume_steps / max_iterations));
     vec3 color_white_point = pow(vec3(1.0) - exp(-color.rgb / white_point), vec3(1.0 / 6.0));    
-    //color.rgb = color_white_point;
+    //color.rgb = color_white_point;*/
      
     FragColor = color;
 }
