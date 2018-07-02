@@ -284,6 +284,7 @@ float getDensity(vec3 pos){
 
     //--- Fase da Erosion ---
     float timed_erosion = threshold_erosion * (0.5 * sin(timer/5000 + 2 * cos(timer/1000)) + 0.5);
+    //if(density < threshold_erosion)
     if(density < timed_erosion)
         density -= erosion_amount *  getErosion(pos);
     
@@ -332,7 +333,7 @@ float computeOclusion(vec3 step_pos, vec3 step_vec, vec3 dir_to_sun){
             float stepSize = length(step) * rayLength; 
             float transmittance = Transmittance(density, stepSize, step, dir_to_sun); 
             oclusion *= transmittance;
-            if(oclusion < 0.15) break; 
+            if(oclusion < 0.25) break; 
                        
         }
         
@@ -471,14 +472,14 @@ void ComputLight(vec3 RayOrigin, vec3 rayDirection, float rayLength,
     float phase = Scattering(rayDirection, dir_to_sun);
 
     // Reduce the ambient light for the given position density
-    vec3 ambiente = density * ambiente_light; 
+    vec3 ambiente =  density * ambiente_light; 
     
     //---   Evaluate direct loght ---    allows shadows from other clouds   
     vec3 direct_light = ambiente_light * computeOclusion(pos, rayDirection, dir_to_sun);
     
     //---   Combine everything   ---
     float sigmaExt = (sigmaAbsorption + sigmaScattering) * density;  // sigma Extintion 
-    S = sigmaExt * (direct_light + phase*ambiente);
+    S = sigmaExt * (direct_light  + phase*ambiente);
 }
 
 void main() {
@@ -555,14 +556,14 @@ void main() {
             float sigmaExt = (sigmaAbsorption + sigmaScattering)*density;
             float clampedExtinction = max( sigmaExt , 1e-10);
             Sint = (Step_Scatt - Step_Scatt * Step_Tr) / clampedExtinction; 
-            
+           
             // Accumulate scattering attenuated by extinction
             scatteredLight += Sint * transmittance; 
 
             // Accumulate extinction for that step
             transmittance *= Step_Tr; 
-            if(transmittance < 0.01) break; 
-            
+            if(transmittance < 0.10) break; 
+        
             color.a = 1; 
         }
 
@@ -592,6 +593,7 @@ void main() {
     vec3 color_log = pow( (mapped), vec3(1.0 / 1.1)); // gamma = 0.7
      
     color.rgb = mix(color_reinhard, color_log, 0.5);
+ 
 
     /*
     // tone mapping using whit point 
